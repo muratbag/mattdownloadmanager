@@ -54,7 +54,8 @@ jobs:
         run: choco install innosetup --no-progress -y
 
       - name: Build the four programs
-        run: cargo build --release --no-default-features -p mdm-app -p mdm-nmhost -p mdm-cli -p mdm-mcp
+        # tools/installer/build.ps1 expects the programs under target/<rust target>/release
+        run: cargo build --release --target x86_64-pc-windows-msvc --no-default-features -p mdm-app -p mdm-nmhost -p mdm-cli -p mdm-mcp
 
       - name: Browser extensions (Chromium, Firefox, Safari + the signed CRX)
         # The secret holds the key's content; pack.ps1 wants a path, so write it to a temp file.
