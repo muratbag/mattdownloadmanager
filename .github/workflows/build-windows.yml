@@ -1,11 +1,12 @@
 name: build-windows
 
-# Builds the Windows release from this repository: the four programs (Rust, GNU toolchain, so no
-# Visual Studio is needed), the browser extensions, and the Inno Setup installer. The artifacts are
-# the inputs of the signing step (SignPath, once the project is accepted; set the SIGNPATH_* secrets
-# and uncomment the last step).
+# Builds the Windows release from this repository with the runner's native MSVC toolchain: the four
+# programs (Rust), the browser extensions (Chromium, Firefox, Safari and the signed CRX), and the
+# Inno Setup installer with the portable/x64 ZIPs. The artifacts in target/dist are the inputs of the
+# signing step (SignPath, once the project is accepted: set SIGNPATH_API_TOKEN and uncomment the last
+# step).
 #
-# The same commands are in WORKPC-SETUP.md; this workflow is what makes the release a *verifiable*
+# The same commands are in WORKPC-SETUP.md; this workflow is what makes a release a *verifiable*
 # build of the source (a SignPath requirement: the binary must be the output of an automated build
 # of the repository).
 
@@ -19,7 +20,6 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  RUSTUP_TOOLCHAIN: stable-x86_64-pc-windows-gnu
 
 jobs:
   windows:
@@ -27,24 +27,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install the Rust toolchain (GNU host, x86_64)
+      - name: Rust (stable, MSVC)
         run: |
-          rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal
-          rustup default stable-x86_64-pc-windows-gnu
+          rustup default stable
           rustc --version
           cargo --version
-
-      - name: MinGW-w64 (the linker the GNU toolchain needs)
-        uses: egor-tensin/setup-mingw@v2
-        with:
-          platform: x64
 
       - name: Python (the extension packer signs the CRX)
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install the CRX signing dependency
+      - name: The CRX signing dependency
         run: python -m pip install --upgrade cryptography
 
       - name: Cache cargo
@@ -56,7 +50,10 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build
+      - name: Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build the four programs
         run: cargo build --release --no-default-features -p mdm-app -p mdm-nmhost -p mdm-cli -p mdm-mcp
 
       - name: Browser extensions (Chromium, Firefox, Safari + the signed CRX)
@@ -64,13 +61,11 @@ jobs:
           MDM_EXTENSION_KEY: ${{ secrets.EXTENSION_SIGNING_KEY }}
         run: powershell -ExecutionPolicy Bypass -File tools/extension/pack.ps1
 
-      - name: Inno Setup
-        run: choco install innosetup --no-progress -y
-
-      - name: Installer and zips
-        run: powershell -ExecutionPolicy Bypass -File tools/installer/build.ps1
+      - name: Installer and ZIPs into target/dist
+        run: powershell -ExecutionPolicy Bypass -File tools/installer/build.ps1 -NoBuild
 
       - name: Upload the unsigned artifacts (input of the signing step)
+        id: upload
         uses: actions/upload-artifact@v4
         with:
           name: windows-release
@@ -78,9 +73,9 @@ jobs:
 
       # ---- Signing (after the project is accepted by SignPath Foundation) ------------------
       # 1. Create a SignPath project linked to this repository, a signing policy `release-signing`
-      #    with a manual approval, and an artifact configuration matching the files above.
-      # 2. Add the secrets SIGNPATH_API_TOKEN and EXTENSION_SIGNING_KEY.
-      # 3. Uncomment this step and make the release job depend on it.
+      #    with a manual approval, and an artifact configuration matching these files.
+      # 2. Add the secret SIGNPATH_API_TOKEN and the variables SIGNPATH_ORG_ID.
+      # 3. Uncomment this step.
       #
       # - name: Sign with SignPath
       #   uses: signpath/github-action-submit-signing-request@v1
