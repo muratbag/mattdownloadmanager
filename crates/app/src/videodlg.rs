@@ -147,54 +147,89 @@ pub fn refresh_ytdlp(rt: &tokio::runtime::Handle) {
     });
 }
 
-/// Keep ffmpeg current, but rarely: its builds are republished almost daily and are about 80 MB,
-/// so only a copy more than [`FFMPEG_MAX_AGE_DAYS`] old is refreshed. Once per session.
-/// ffmpeg is needed to merge a video's separate picture and sound; an old one keeps working, so a
-/// failed check changes nothing.
-pub fn refresh_ffmpeg(rt: &tokio::runtime::Handle) {
-    use std::sync::atomic::{AtomicBool, Ordering};
-    static DONE: AtomicBool = AtomicBool::new(false);
-    const FFMPEG_MAX_AGE_DAYS: i64 = 45;
-    let Some(dir) = mdm_tools::tools_dir() else {
-        return;
-    };
-    // Chosen by the person: theirs to update (install_latest returns it untouched anyway).
-    let Some(current) = mdm_tools::ffmpeg::installed(&dir) else {
-        return;
-    };
-    if DONE.swap(true, Ordering::SeqCst) {
-        return;
-    }
-    // The version is "<line>.<build date>", e.g. 9.0.20261028: the date is the last part.
-    let Some(stamp) = current
-        .version
-        .rsplit('.')
-        .next()
-        .and_then(|d| d.parse::<i32>().ok())
-    else {
-        return;
-    };
-    let Some(built) = chrono::NaiveDate::from_ymd_opt(
+/// ffmpeg's build date, in days from its `9.0.<yyyymmdd>` version, to now.
+fn ffmpeg_age_days(version: &str) -> Option<i64> {
+    let stamp = version.rsplit('.').next()?.parse::<i32>().ok()?;
+    let built = chrono::NaiveDate::from_ymd_opt(
         stamp / 10000,
         ((stamp / 100) % 100) as u32,
         (stamp % 100) as u32,
-    ) else {
-        return;
-    };
-    let age = chrono::Utc::now().date_naive() - built;
-    if age.num_days() < FFMPEG_MAX_AGE_DAYS {
+    )?;
+    Some((chrono::Utc::now().date_naive() - built).num_days())
+}
+
+/// Older than a month: its builds are republished almost daily and are about 80 MB, so refreshing
+/// more often than this would download the same thing again for nothing.
+const FFMPEG_MAX_AGE_DAYS: i64 = 45;
+
+fn stale_ffmpeg(age_days: i64) -> bool {
+    age_days >= FFMPEG_MAX_AGE_DAYS
+}
+
+/// Keep the video helpers current for the whole session, not just at the start: yt-dlp and a stale
+/// ffmpeg are checked a little after start and then once a day. A failed check is retried
+/// (`RETRY_AFTER`, up to [`TRIES`]) — the start at login happens before the network is up on many
+/// machines, and the old one-shot check then never ran again for the rest of the session.
+pub fn auto_update(rt: &tokio::runtime::Handle) {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::time::Duration;
+    static STARTED: AtomicBool = AtomicBool::new(false);
+    if STARTED.swap(true, Ordering::SeqCst) {
         return;
     }
-    tracing::info!("video helpers: ffmpeg {} is {} days old, refreshing", current.version, age.num_days());
+    const FIRST_CHECK: Duration = Duration::from_secs(30);
+    const RETRY_AFTER: Duration = Duration::from_secs(10 * 60);
+    const TRIES: u32 = 3;
+    const DAILY: Duration = Duration::from_secs(24 * 60 * 60);
     rt.spawn(async move {
-        match mdm_tools::ffmpeg::install_latest(&dir, &crate::settings::own_net(), None).await {
-            Ok(i) => tracing::info!("video helpers: ffmpeg {} installed", i.version),
-            Err(e) => eprintln!("ffmpeg update check: {e}"), // not translated: a log line
+        tokio::time::sleep(FIRST_CHECK).await;
+        loop {
+            let Some(dir) = mdm_tools::tools_dir() else {
+                return;
+            };
+            if mdm_tools::refreshable(&dir) {
+                for attempt in 1..=TRIES {
+                    match mdm_tools::install_latest(&dir, &crate::settings::own_net(), None).await {
+                        Ok(i) => {
+                            tracing::info!("video helpers: yt-dlp {} checked and current", i.version);
+                            break;
+                        }
+                        Err(e) => {
+                            eprintln!("yt-dlp update check ({attempt}/{TRIES}): {e}");
+                            if attempt == TRIES {
+                                break;
+                            }
+                            tokio::time::sleep(RETRY_AFTER).await;
+                        }
+                    }
+                }
+            }
+            if let Some(current) = mdm_tools::ffmpeg::installed(&dir)
+                && ffmpeg_age_days(&current.version).is_none_or(stale_ffmpeg)
+            {
+                for attempt in 1..=TRIES {
+                    match mdm_tools::ffmpeg::install_latest(&dir, &crate::settings::own_net(), None)
+                        .await
+                    {
+                        Ok(i) => {
+                            tracing::info!("video helpers: ffmpeg {} installed", i.version);
+                            break;
+                        }
+                        Err(e) => {
+                            eprintln!("ffmpeg update check ({attempt}/{TRIES}): {e}");
+                            if attempt == TRIES {
+                                break;
+                            }
+                            tokio::time::sleep(RETRY_AFTER).await;
+                        }
+                    }
+                }
+            }
+            tokio::time::sleep(DAILY).await;
         }
     });
 }
 
-/// The installed ffmpeg in `dir` (a tiny shim so the caller above reads like the yt-dlp one).
 
 fn tools() -> Tools {
     let dir = mdm_tools::tools_dir();

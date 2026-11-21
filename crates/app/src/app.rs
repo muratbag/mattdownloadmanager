@@ -1496,12 +1496,12 @@ impl App {
         // Browser integration: a registration that leads nowhere is repaired (#818); Linux and
         // macOS, which have no installer step, register with each browser here too.
         crate::extension::repair_at_start();
-        // Video helpers keep themselves current, quietly (#1.0.8): yt-dlp at every start (video
-        // sites change often, and an old yt-dlp is the usual reason a page stops working), ffmpeg
-        // only when its build is over a month old (about 80 MB). Both are verified by
-        // `install_latest` and never replaced by an older release; a failure changes nothing.
-        crate::videodlg::refresh_ytdlp(&rt);
-        crate::videodlg::refresh_ffmpeg(&rt);
+        // Video helpers keep themselves current, quietly (#1.0.8, #1.0.10): yt-dlp shortly after
+        // the start and then once a day while the app runs (video sites change often), ffmpeg only
+        // when its build is over a month old (about 80 MB). A failed check — a start at login before
+        // the network is up, for one — is retried; both are verified by `install_latest` and never
+        // replaced by an older release.
+        crate::videodlg::auto_update(&rt);
         // The categories, for code that only has a `Category` (the list's own below too).
         settings.publish_categories();
         // The remote control (#141): off unless Options → Remote turned it on.
