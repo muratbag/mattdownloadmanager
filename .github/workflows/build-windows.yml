@@ -57,9 +57,14 @@ jobs:
         run: cargo build --release --no-default-features -p mdm-app -p mdm-nmhost -p mdm-cli -p mdm-mcp
 
       - name: Browser extensions (Chromium, Firefox, Safari + the signed CRX)
+        # The secret holds the key's content; pack.ps1 wants a path, so write it to a temp file.
         env:
-          MDM_EXTENSION_KEY: ${{ secrets.EXTENSION_SIGNING_KEY }}
-        run: powershell -ExecutionPolicy Bypass -File tools/extension/pack.ps1
+          EXTENSION_KEY_PEM: ${{ secrets.EXTENSION_SIGNING_KEY }}
+        run: |
+          $key = Join-Path $env:RUNNER_TEMP "extension-key.pem"
+          [System.IO.File]::WriteAllText($key, $env:EXTENSION_KEY_PEM)
+          $env:MDM_EXTENSION_KEY = $key
+          powershell -ExecutionPolicy Bypass -File tools/extension/pack.ps1
 
       - name: Installer and ZIPs into target/dist
         run: powershell -ExecutionPolicy Bypass -File tools/installer/build.ps1 -NoBuild
