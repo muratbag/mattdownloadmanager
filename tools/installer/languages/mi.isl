@@ -1,4 +1,4 @@
-﻿; Mister Download Manager's installer in Maori: tools/installer/languages.py
+﻿; Matt Download Manager's installer in Maori: tools/installer/languages.py
 ; (machine-translated; a native speaker may correct any line).
 
 [LangOptions]
@@ -291,8 +291,8 @@ ShutdownBlockReasonUninstallingApp=E tango ana i a %1.
 
 [CustomMessages]
 TaskBrowser=Whakaritea te whakauru &pūtirotiro (Chrome, Edge, Brave, Firefox)
-TaskTorrents=Whakatuwheratia ngā kōnae .&torrent me ngā hononga autō ki te Mister Download Manager
-TaskStartup=Tīmatahia te Mister Download Manager ina tīmata a &Windows
+TaskTorrents=Whakatuwheratia ngā kōnae .&torrent me ngā hononga autō ki te Matt Download Manager
+TaskStartup=Tīmatahia te Matt Download Manager ina tīmata a &Windows
 TaskGroupOther=Ētahi atu:
-Launch=Tīmatahia te Mister Download Manager
+Launch=Tīmatahia te Matt Download Manager
 KeepData=Mukua hoki tō rārangi tikiake me ngā tautuhinga?%n%nKāore ō kōnae i tikiakehia e pā ki tēnā.

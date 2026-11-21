@@ -243,6 +243,9 @@ enum Cmd {
     CheckUpdates,
     About,
     TellFriend,
+    /// Help → Rate on the Chrome Web Store: the listing's page in the browser (ratings there are
+    /// what make the extension visible in the store's search, so they are worth asking for).
+    RateInStore,
     /// Help → Support MDM: the creator's GitHub Sponsors page in the browser.
     Support,
     Exit,
@@ -1493,6 +1496,12 @@ impl App {
         // Browser integration: a registration that leads nowhere is repaired (#818); Linux and
         // macOS, which have no installer step, register with each browser here too.
         crate::extension::repair_at_start();
+        // Video helpers keep themselves current, quietly (#1.0.8): yt-dlp at every start (video
+        // sites change often, and an old yt-dlp is the usual reason a page stops working), ffmpeg
+        // only when its build is over a month old (about 80 MB). Both are verified by
+        // `install_latest` and never replaced by an older release; a failure changes nothing.
+        crate::videodlg::refresh_ytdlp(&rt);
+        crate::videodlg::refresh_ffmpeg(&rt);
         // The categories, for code that only has a `Category` (the list's own below too).
         settings.publish_categories();
         // The remote control (#141): off unless Options → Remote turned it on.
@@ -5051,9 +5060,9 @@ impl App {
         self.notice = Some((
             crate::i18n::mark("Torrent settings"),
             crate::i18n::fmt(
-                // i18n: after ticking "Open magnet links and .torrent files with Mister Download Manager", when Windows' Default apps keeps another app; {apps}: their names. "MAGNET" as Windows' Default apps lists it
+                // i18n: after ticking "Open magnet links and .torrent files with Matt Download Manager", when Windows' Default apps keeps another app; {apps}: their names. "MAGNET" as Windows' Default apps lists it
                 crate::i18n::t(
-                    "Windows still opens magnet links or .torrent files with {apps}, chosen in Windows' Default apps, where only you can change it. Settings opens there now: pick Mister Download Manager for MAGNET and .torrent.",
+                    "Windows still opens magnet links or .torrent files with {apps}, chosen in Windows' Default apps, where only you can change it. Settings opens there now: pick Matt Download Manager for MAGNET and .torrent.",
                 ),
                 &[("apps", &crate::i18n::isolate(&others.join(", ")))],
             ),
@@ -5881,7 +5890,7 @@ impl App {
             return line(&ApiAnswer { api: on });
         } else if !self.settings.automation_api {
             return line(&ErrorAnswer {
-                error: "the automation API is off (misterdownloadmanager-cli api on)".into(),
+                error: "the automation API is off (mattdownloadmanager-cli api on)".into(),
                 code: Some(ipc::api::API_OFF.into()),
             });
         }
@@ -5978,7 +5987,7 @@ impl App {
         }
     }
 
-    /// `{"pair": true}` (`misterdownloadmanager-cli pair`, #157): a new pairing code, the
+    /// `{"pair": true}` (`mattdownloadmanager-cli pair`, #157): a new pairing code, the
     /// page's addresses and a QR code for a terminal; an error while the remote control is off
     /// or not listening.
     pub fn pair_answer(&mut self) -> String {
@@ -6899,6 +6908,7 @@ impl App {
             }
             Cmd::About => self.about = Some(crate::help::About),
             Cmd::Support => crate::help::support(),
+            Cmd::RateInStore => crate::help::rate_in_store(),
             Cmd::TellFriend => {
                 if self.tell_friend.is_none() {
                     self.tell_friend = Some(crate::help::TellFriend::new());
@@ -7392,7 +7402,7 @@ impl App {
                 Err(e) => {
                     if self.save_failed.as_ref() != Some(&e) {
                         self.notice = Some((
-                            crate::i18n::mark("Mister Download Manager"),
+                            crate::i18n::mark("Matt Download Manager"),
                             crate::i18n::fmt(
                                 crate::i18n::t(
                                     "The download list could not be saved: {error}. Changes are kept while MDM runs.",
@@ -7607,7 +7617,7 @@ impl App {
                 I("&Keyboard shortcuts", Cmd::Shortcuts, true, false),
                 Sep,
                 I(
-                    "Mister Download Manager &Home Page",
+                    "Matt Download Manager &Home Page",
                     Cmd::HelpPage(""),
                     true,
                     false,
@@ -7616,8 +7626,11 @@ impl App {
                 Sep,
                 I("Check for &updates...", Cmd::CheckUpdates, true, false),
                 Sep,
-                I("&About Mister Download Manager", Cmd::About, true, false),
+                I("&About Matt Download Manager", Cmd::About, true, false),
                 I("Tell a &friend", Cmd::TellFriend, true, false),
+                // The store listing's ratings are what make the extension visible there: asked for
+                // only, never opened by itself.
+                I("&Rate on the Chrome Web Store", Cmd::RateInStore, true, false),
                 // MDM's, not IDM's: the creator's GitHub Sponsors page, asked for only.
                 I("Support &MDM", Cmd::Support, true, false),
             ],
@@ -8004,7 +8017,7 @@ impl App {
             Popup::Node(node) => (self.node_entries(node), None),
             Popup::DropTarget => (
                 vec![
-                    MenuEntry::Item("Show Mister Download Manager", Cmd::ShowMain, true, false),
+                    MenuEntry::Item("Show Matt Download Manager", Cmd::ShowMain, true, false),
                     MenuEntry::Item("&Add new download", Cmd::AddUrl, true, false),
                     MenuEntry::Sep,
                     MenuEntry::Item("Hide drop target", Cmd::ToggleDropTarget, true, false),
@@ -9416,7 +9429,7 @@ impl App {
             } else {
                 // A file MDM can't download or import (a picture, a program).
                 self.notice = Some((
-                    crate::i18n::mark("Mister Download Manager"),
+                    crate::i18n::mark("Matt Download Manager"),
                     crate::i18n::fmt(
                         crate::i18n::t(
                             "Nothing to download in {item}: drop links, a .torrent file, or a list of addresses (.txt, .ef2).",

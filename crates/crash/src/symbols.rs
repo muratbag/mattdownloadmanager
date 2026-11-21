@@ -1,6 +1,8 @@
-//! The release's symbols, fetched when a report is to be made readable: the Breakpad `.sym`
-//! files CI makes for each release (too large to ship: the Windows debug info alone is 128 MB),
-//! published as one zip per system beside the release's downloads.
+//! The release's symbols, which make a report readable: the Breakpad `.sym` files CI makes for
+//! each release (too large to ship: the Windows debug info alone is 128 MB), published as one zip
+//! per system beside the release's downloads. This build publishes no such release and must not
+//! fetch anything from another project's: [`fetch`] downloads nothing, and a report is made
+//! readable from symbols already on this computer (if any).
 
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -30,7 +32,7 @@ pub fn platform() -> &'static str {
 
 /// The release asset holding `version`'s symbols for this system.
 pub fn asset_name(version: &str) -> String {
-    format!("MisterDownloadManager-{version}-symbols-{}.zip", platform())
+    format!("MattDownloadManager-{version}-symbols-{}.zip", platform())
 }
 
 pub fn asset_url(version: &str) -> String {
@@ -67,30 +69,17 @@ pub fn have(data: &Path, version: &str) -> bool {
 /// Fetch `version`'s symbols into the store with MDM's own engine (`net`); `progress(done,
 /// total)` as it downloads. A download cut off resumes next time. Earlier versions' symbols are
 /// removed (only the running version's are useful).
+///
+/// This build has no release of its own to fetch them from, so nothing is downloaded: the report
+/// keeps the bare addresses the stacks show, and stays on this computer.
 pub async fn fetch(
     data: &Path,
     version: &str,
     net: mdm_engine::Options,
     progress: &(dyn Fn(u64, Option<u64>) + Send + Sync),
 ) -> Result<(), String> {
-    let url = url::Url::parse(&asset_url(version)).map_err(|e| e.to_string())?;
-    let parent = data.join("symbols");
-    std::fs::create_dir_all(&parent).map_err(|e| e.to_string())?;
-    let zip = parent.join(asset_name(version));
-    mdm_engine::fetch(url, &zip, net, progress)
-        .await
-        .map_err(|e| e.to_string())?;
-    let bytes = std::fs::read(&zip).map_err(|e| e.to_string())?;
-    let _ = std::fs::remove_file(&zip);
-    let dir = store(data, version);
-    if let Ok(rd) = std::fs::read_dir(&parent) {
-        for e in rd.flatten() {
-            if e.file_name() != version && e.path().is_dir() {
-                let _ = std::fs::remove_dir_all(e.path());
-            }
-        }
-    }
-    extract(&bytes, &dir)
+    let _ = (data, version, net, progress);
+    Err("this build publishes no symbols".to_owned())
 }
 
 /// Unzip `bytes` into `dir`, every entry's path checked to stay inside it.
@@ -122,7 +111,7 @@ mod tests {
 
     #[test]
     fn names_follow_the_release() {
-        assert!(asset_name("0.2.3").starts_with("MisterDownloadManager-0.2.3-symbols-"));
+        assert!(asset_name("0.2.3").starts_with("MattDownloadManager-0.2.3-symbols-"));
         assert!(asset_url("0.2.3").contains("/releases/download/v0.2.3/"));
     }
 

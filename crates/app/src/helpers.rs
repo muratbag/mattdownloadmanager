@@ -658,7 +658,7 @@ impl Programs {
                 ),
                 (None, Some(i)) => crate::i18n::fmt(
                     // i18n: Video helpers: {version} = the version of MDM's own copy
-                    crate::i18n::t("Mister Download Manager's own copy, version {version}"),
+                    crate::i18n::t("Matt Download Manager's own copy, version {version}"),
                     &[("version", &i.version)],
                 ),
                 // Linux and macOS as before: there the system's package manager (or Homebrew)

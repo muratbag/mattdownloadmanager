@@ -212,7 +212,7 @@ function fakeApi({
       onClicked: event("menu"),
     },
     // The browser's language: German here.
-    i18n: { getMessage: (key) => ({ menu: "Mit Mister Download Manager herunterladen" })[key] ?? "" },
+    i18n: { getMessage: (key) => ({ menu: "Mit Matt Download Manager herunterladen" })[key] ?? "" },
   };
   if (safari) delete api.downloads;
   if (!firefox && !safari) api.declarativeNetRequest = { getSessionRules: async () => [], updateSessionRules: async (r) => calls.push(["dnr", r]) };
@@ -314,7 +314,7 @@ const ok = (what) => {
   const cookies = calls.find((c) => c[0] === "cookies");
   assert.deepEqual(cookies[1], { url: "https://x/a.zip", storeId: "firefox-container-2" });
   const native = calls.find((c) => c[0] === "native");
-  assert.equal(native[1], "com.misterdownloadmanager.host");
+  assert.equal(native[1], "com.mattdownloadmanager.host");
   const m = native[2];
   assert.deepEqual(
     [m.url, m.referrer, m.cookies, m.filename, m.size, m.mime, m.userAgent, m.v],
@@ -478,7 +478,7 @@ const ok = (what) => {
   ok("the app's file types decide, asked once");
 }
 
-// Mister Download Manager not installed (no host): everything stays with the browser, and the
+// Matt Download Manager not installed (no host): everything stays with the browser, and the
 // toolbar button says something is wrong.
 {
   const { api, calls, listeners, store } = fakeApi({ firefox: false, host: false });
@@ -751,7 +751,7 @@ const ok = (what) => {
   ok("#948 Chromium: a name only the address gave is sent as a guess; the rule keeps attachments");
 }
 
-// Right-click → Download with Mister Download Manager: handed over as an explicit request, so
+// Right-click → Download with Matt Download Manager: handed over as an explicit request, so
 // the host takes any link (an .html page here); a failure opens the help page's section.
 {
   const { api, calls, listeners } = fakeApi({ firefox: false });
@@ -867,17 +867,17 @@ const ok = (what) => {
   let answered = 0;
   ({ sent, tabs } = await run(long, () => (++answered === 3 ? { ok: false, why: "not-running" } : { ok: true })));
   assert.equal(sent.length, 3);
-  assert.deepEqual(tabs, ["https://misterdownloadmanager.com/help/browser-help.html#not-running"]);
+  assert.deepEqual(tabs, ["https://mattdownloadmanager.com/help/browser-help.html#not-running"]);
   // A link longer than a whole message: the others go, and the help page says one was left out.
   const huge = `https://x.test/${"x".repeat(MAX)}`;
   ({ sent, tabs } = await run([...long, huge]));
   assert.deepEqual(sent.flatMap((m) => m.links), long);
-  assert.deepEqual(tabs, ["https://misterdownloadmanager.com/help/browser-help.html#too-large"]);
+  assert.deepEqual(tabs, ["https://mattdownloadmanager.com/help/browser-help.html#too-large"]);
   // Only such links: nothing goes, too large.
   let store;
   ({ sent, tabs, store } = await run([huge]));
   assert.deepEqual(sent, []);
-  assert.deepEqual(tabs, ["https://misterdownloadmanager.com/help/browser-help.html#too-large"]);
+  assert.deepEqual(tabs, ["https://mattdownloadmanager.com/help/browser-help.html#too-large"]);
   assert.equal(store.status.why, "too-large");
   ok("Download all links: a list at the limit whole, past it in parts the host takes, failures explained");
 }
@@ -1189,7 +1189,7 @@ const ok = (what) => {
     await ask(listeners, { type: "open-post", url: "https://news.test/p/1" }, from);
     assert.deepEqual(await ask(listeners, { type: "open-post", url: "https://elsewhere.test/p/1" }, from), { ok: false }, "a post on this page's site only");
     assert.deepEqual(opened, [
-      { url: "https://misterdownloadmanager.com/download", openerTabId: 5, index: 3 },
+      { url: "https://mattdownloadmanager.com/download", openerTabId: 5, index: 3 },
       { url: "https://news.test/p/1", openerTabId: 5, index: 3 },
     ]);
     // A plain file: `direct` with it, and `show` back for "Show".
@@ -2542,11 +2542,11 @@ function videoButton({ stored = {} } = {}) {
   // #852: the app's word on what the look-up lacked, shown with the qualities: its text, and a
   // link to MDM's own help page only (never another address a page could slip in).
   const { noticeOf } = make(["noticeOf"], "{ noticeOf }");
-  const help = "https://misterdownloadmanager.com/de/help/video.html#javascript-runtime";
+  const help = "https://mattdownloadmanager.com/de/help/video.html#javascript-runtime";
   const notice = { text: "YouTube needs a JavaScript runtime", link: "How to install one", url: help };
   assert.deepEqual(noticeOf({ ...ready, notice }), notice);
   assert.deepEqual(noticeOf({ state: "failed", reason: "no-choices", notice }), notice);
-  for (const url of ["javascript:alert(1)", "https://misterdownloadmanager.com.evil.test/", "http://misterdownloadmanager.com/help/", 7]) {
+  for (const url of ["javascript:alert(1)", "https://mattdownloadmanager.com.evil.test/", "http://mattdownloadmanager.com/help/", 7]) {
     assert.deepEqual(noticeOf({ ...ready, notice: { ...notice, url } }), { text: notice.text, link: "", url: "" }, String(url));
   }
   for (const n of [undefined, null, "words", { text: "" }, { text: 7 }, { link: "x", url: help }]) {
@@ -2798,7 +2798,7 @@ function videoButton({ stored = {} } = {}) {
   load(api, false);
   await listeners.installed({ reason: "update" });
   const item = calls.find((c) => c[0] === "menu-item")[1];
-  assert.equal(item.title, "Mit Mister Download Manager herunterladen");
+  assert.equal(item.title, "Mit Matt Download Manager herunterladen");
   const dir = new URL("../../extension/_locales/", import.meta.url);
   const english = JSON.parse(readFileSync(new URL("en/messages.json", dir), "utf8"));
   for (const locale of readdirSync(dir)) {

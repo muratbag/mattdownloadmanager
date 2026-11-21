@@ -1,8 +1,9 @@
 //! Updating in place (Help → Check for updates → Update now): this copy's release file, fetched
-//! and checked in the background (`mdm_tools::update`: the release's signed checksum list), then
-//! put where this copy is, on a thread of its own too (unpacking, `tar`, `hdiutil`, `ditto`: the
-//! window's thread waits for none of them, #222). MDM closes for it; the new copy starts with
-//! `/updated`, waits for the old one to be gone, and removes what the update set aside.
+//! from the update feed's own server (`mdm_tools::update::fetch_feed_file`: the file is checked
+//! against the SHA-256 the feed names for it), then put where this copy is, on a thread of its
+//! own too (unpacking, `tar`, `hdiutil`, `ditto`: the window's thread waits for none of them,
+//! #222). MDM closes for it; the new copy starts with `/updated`, waits for the old one to be
+//! gone, and removes what the update set aside.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -27,8 +28,9 @@ pub enum Next {
 }
 
 /// The release file this copy updates from, when `assets` (name, address) has it (by either of
-/// its names, [`Install::assets`]: the one for this build's own processor, x64, ARM64 or 32-bit)
-/// and the signature of the release's checksum list.
+/// its names, [`Install::assets`]: the one for this build's own processor, x64, ARM64 or 32-bit).
+/// The update feed's parser lists only files with a SHA-256 (and on the feed's own server), so a
+/// name here always comes with a hash to check the download against.
 pub fn asset_for(install: Install, version: &str, assets: &[(String, String)]) -> Option<String> {
     asset_on(install, Arch::THIS, version, assets)
 }
@@ -41,9 +43,6 @@ fn asset_on(
     assets: &[(String, String)],
 ) -> Option<String> {
     let has = |n: &str| assets.iter().any(|(a, _)| a == n);
-    if !(has("SHA256SUMS.txt") && has("SHA256SUMS.txt.sig")) {
-        return None;
-    }
     install
         .assets_on(arch, version)
         .into_iter()
@@ -74,12 +73,16 @@ impl Drop for Job {
 }
 
 impl Job {
+    /// Download the release file `url` (from the feed's own host `host`) as `name`, checking it
+    /// against `sha256` (the update feed's, hex), then put it in place.
     pub fn start(
         rt: &tokio::runtime::Handle,
         ctx: &egui::Context,
         install: Install,
-        assets: Vec<(String, String)>,
+        url: String,
+        host: String,
         name: String,
+        sha256: String,
     ) -> Job {
         let progress = Arc::new(Progress::default());
         let slot = Arc::new(Mutex::new(None));
@@ -97,9 +100,11 @@ impl Job {
         let net = crate::settings::own_net();
         let task = rt.spawn(async move {
             let fetched = match folder() {
-                Some(dir) => mdm_tools::update::fetch(&assets, &name, &dir, &net, &p)
-                    .await
-                    .map_err(|e| e.to_string()),
+                Some(dir) => mdm_tools::update::fetch_feed_file(
+                    &url, &host, &name, &sha256, &dir, &net, &p,
+                )
+                .await
+                .map_err(|e| e.to_string()),
                 None => Err("no data folder".into()),
             };
             let res = match fetched {
@@ -309,27 +314,24 @@ mod tests {
     const X64: Option<Arch> = Some(Arch::X64);
 
     #[test]
-    fn only_a_signed_release_with_this_copys_file_updates_it() {
+    fn only_a_release_with_this_copys_file_updates_it() {
         let a = |names: &[&str]| -> Vec<(String, String)> {
             names
                 .iter()
                 .map(|n| (n.to_string(), format!("https://x/{n}")))
                 .collect()
         };
-        let full = a(&[
-            "MisterDownloadManager-0.2.2-setup.exe",
-            "SHA256SUMS.txt",
-            "SHA256SUMS.txt.sig",
-        ]);
+        let full = a(&["MattDownloadManager-0.2.2-setup.exe"]);
         assert_eq!(
             asset_on(Install::Installer, X64, "0.2.2", &full).as_deref(),
-            Some("MisterDownloadManager-0.2.2-setup.exe")
+            Some("MattDownloadManager-0.2.2-setup.exe")
         );
-        // An unsigned release, another kind's file, a build from source: no.
-        let unsigned = a(&["MisterDownloadManager-0.2.2-setup.exe", "SHA256SUMS.txt"]);
-        assert_eq!(asset_on(Install::Installer, X64, "0.2.2", &unsigned), None);
+        // Another kind's file, and a build from source: no.
         assert_eq!(asset_on(Install::PortableZip, X64, "0.2.2", &full), None);
         assert_eq!(asset_on(Install::Source, X64, "0.2.2", &full), None);
+        // A release without this copy's file: it offers the release's page instead.
+        let empty = a(&[]);
+        assert_eq!(asset_on(Install::Installer, X64, "0.2.2", &empty), None);
     }
 
     /// Linux's and macOS's files lose "-experimental" in a release: a copy finds its file by
@@ -339,13 +341,12 @@ mod tests {
         let release = |names: &[&str]| -> Vec<(String, String)> {
             names
                 .iter()
-                .chain(&["SHA256SUMS.txt", "SHA256SUMS.txt.sig"])
                 .map(|n| (n.to_string(), format!("https://x/{n}")))
                 .collect()
         };
-        let old = "MisterDownloadManager-0.3.0-linux-x86_64-experimental.AppImage";
-        let new = "MisterDownloadManager-0.3.0-linux-x86_64.AppImage";
-        let deb = "MisterDownloadManager-0.3.0-linux-x86_64.deb";
+        let old = "MattDownloadManager-0.3.0-linux-x86_64-experimental.AppImage";
+        let new = "MattDownloadManager-0.3.0-linux-x86_64.AppImage";
+        let deb = "MattDownloadManager-0.3.0-linux-x86_64.deb";
         for (assets, want) in [
             (release(&[old]), Some(old)),
             (release(&[new, deb]), Some(new)),
@@ -362,9 +363,6 @@ mod tests {
             asset_on(Install::Deb, X64, "0.3.0", &release(&[new, deb])).as_deref(),
             Some(deb)
         );
-        // Unsigned: neither.
-        let unsigned = vec![(new.to_string(), format!("https://x/{new}"))];
-        assert_eq!(asset_on(Install::AppImage, X64, "0.3.0", &unsigned), None);
     }
 
     /// A release with every processor's files: each copy takes its own processor's, an x64 copy
@@ -372,19 +370,19 @@ mod tests {
     #[test]
     fn each_processor_takes_its_own_file() {
         let names = [
-            "MisterDownloadManager-1.0.0-setup.exe",
-            "MisterDownloadManager-1.0.0-setup-arm64.exe",
-            "MisterDownloadManager-1.0.0-setup-x86.exe",
-            "MisterDownloadManager-1.0.0-portable.zip",
-            "MisterDownloadManager-1.0.0-portable-arm64.zip",
-            "MisterDownloadManager-1.0.0-portable-x86.zip",
-            "MisterDownloadManager-1.0.0-x64.zip",
-            "MisterDownloadManager-1.0.0-arm64.zip",
-            "MisterDownloadManager-1.0.0-x86.zip",
-            "MisterDownloadManager-1.0.0-linux-x86_64.AppImage",
-            "MisterDownloadManager-1.0.0-linux-arm64.AppImage",
-            "MisterDownloadManager-1.0.0-linux-x86_64.deb",
-            "MisterDownloadManager-1.0.0-linux-arm64.deb",
+            "MattDownloadManager-1.0.0-setup.exe",
+            "MattDownloadManager-1.0.0-setup-arm64.exe",
+            "MattDownloadManager-1.0.0-setup-x86.exe",
+            "MattDownloadManager-1.0.0-portable.zip",
+            "MattDownloadManager-1.0.0-portable-arm64.zip",
+            "MattDownloadManager-1.0.0-portable-x86.zip",
+            "MattDownloadManager-1.0.0-x64.zip",
+            "MattDownloadManager-1.0.0-arm64.zip",
+            "MattDownloadManager-1.0.0-x86.zip",
+            "MattDownloadManager-1.0.0-linux-x86_64.AppImage",
+            "MattDownloadManager-1.0.0-linux-arm64.AppImage",
+            "MattDownloadManager-1.0.0-linux-x86_64.deb",
+            "MattDownloadManager-1.0.0-linux-arm64.deb",
             "SHA256SUMS.txt",
             "SHA256SUMS.txt.sig",
         ];
@@ -409,7 +407,7 @@ mod tests {
         ] {
             assert_eq!(
                 asset_on(install, arch, "1.0.0", &assets).as_deref(),
-                Some(format!("MisterDownloadManager-1.0.0-{want}").as_str()),
+                Some(format!("MattDownloadManager-1.0.0-{want}").as_str()),
                 "{install:?} {arch:?}"
             );
         }

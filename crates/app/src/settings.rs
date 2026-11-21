@@ -274,7 +274,7 @@ pub struct Settings {
     /// Sounds: download complete, download failed, queue started, queue stopped/finished.
     pub sounds: [(bool, String); 4],
     /// The local automation API (beyond IDM): status queries over the command channel. Off by
-    /// default; `misterdownloadmanager-cli api on` turns it on.
+    /// default; `mattdownloadmanager-cli api on` turns it on.
     pub automation_api: bool,
     /// Options → Remote (#141, beyond IDM): paired phones and computers on the local network
     /// add and control downloads (crates/remote). Off by default.
@@ -287,7 +287,7 @@ pub struct Settings {
     /// Torrents keep sharing after they finish (D-018: off; a finished torrent stops, like any
     /// download).
     pub torrent_keep_sharing: bool,
-    /// Torrent settings' "Open magnet links and .torrent files with Mister Download Manager":
+    /// Torrent settings' "Open magnet links and .torrent files with Matt Download Manager":
     /// the system opens them with MDM (D-018: opt-in, current user), and the browser hands a
     /// .torrent download over (#1058: off, it stays with the browser for the user's own torrent
     /// client). None: never decided, settled once at the first start (`settle_torrent_handler`)
@@ -404,6 +404,22 @@ impl Settings {
     }
 }
 
+/// Can this copy listen where other computers can reach it? Windows Firewall asks the person to
+/// allow a program the first time it listens, and a standard user can't answer that (it needs an
+/// administrator): such an account's torrent engine starts with incoming connections and UPnP
+/// off (outgoing peers and trackers still work, and Options → Torrents can turn them on once an
+/// administrator allowed the program). Elsewhere, and for an administrator, both are on.
+fn may_listen_for_peers() -> bool {
+    #[cfg(windows)]
+    {
+        crate::win32::elevated()
+    }
+    #[cfg(not(windows))]
+    {
+        true
+    }
+}
+
 impl Default for Settings {
     fn default() -> Self {
         Settings {
@@ -504,8 +520,8 @@ impl Default for Settings {
             torrent_keep_sharing: false,
             torrent_associations: None,
             torrent_associations_before: false,
-            torrent_incoming: true,
-            torrent_upnp: true,
+            torrent_incoming: may_listen_for_peers(),
+            torrent_upnp: may_listen_for_peers(),
             torrent_port: 0,
             torrent_dht: true,
             torrent_lsd: true,
@@ -586,7 +602,7 @@ impl Settings {
             "proxy".into(),
             &|| {
                 format!(
-                    "Mister Download Manager: {} {}:{}",
+                    "Matt Download Manager: {} {}:{}",
                     // i18n: the proxy's password in the system's keychain (Credential Manager, the keyring): its name there, followed by the proxy's address
                     crate::i18n::t("proxy server"),
                     self.proxy_host,
@@ -598,7 +614,7 @@ impl Settings {
         for (a, d) in self.debrid_accounts.iter().zip(&mut disk.debrid_accounts) {
             d.secret = kept(
                 format!("debrid/{}", a.id),
-                &|| format!("Mister Download Manager: {} ({})", a.service.name(), a.user),
+                &|| format!("Matt Download Manager: {} ({})", a.service.name(), a.user),
                 &a.secret,
             );
         }
@@ -611,7 +627,7 @@ impl Settings {
 {user}"
                     ))
                 ),
-                &|| format!("Mister Download Manager: {site} ({user})"),
+                &|| format!("Matt Download Manager: {site} ({user})"),
                 pw,
             );
         }

@@ -3,19 +3,24 @@
 //! install it until one has).
 
 /// The extension's ID loaded unpacked (the public key in extension/manifest.json).
-pub const UNPACKED_ID: &str = "oogbclbbninliongijffeeggalppliok";
+pub const UNPACKED_ID: &str = "pkhbloamkonfkednibekedcckbangkml";
 /// Its ID in the Chrome Web Store, which signs it with the store's own key
 /// (tools/extension/pack.ps1 leaves the manifest's key out of the store's copy). [`store_id`] is
 /// `None` while this is not a valid ID (a placeholder), and then nothing names it.
-pub const STORE_ID: &str = "ejoleppdfgjdndddcjoehopknmlglojp";
+pub const STORE_ID: &str = "kiddjkmogppidgcidochfmeibhbjoedi";
 /// Its IDs in Microsoft Edge Add-ons and Opera add-ons, which give their own; placeholders until
 /// listed there, never served then (`valid_id`).
 pub const OTHER_STORE_IDS: [&str; 2] = ["EDGE_ADDONS_ID_PENDING", "OPERA_ADDONS_ID_PENDING"];
 /// The Firefox add-on's page on addons.mozilla.org (listed: Firefox installs and updates it from
 /// there).
-pub const FIREFOX_PAGE: &str = "https://addons.mozilla.org/firefox/addon/mister-download-manager/";
+pub const FIREFOX_PAGE: &str = "https://idm.teachermatt.com/help/guide-catch-browser-downloads.html";
 /// The Firefox add-on's ID (extension/manifest.firefox.json).
-pub const FIREFOX_ID: &str = "integration@misterdownloadmanager.com";
+pub const FIREFOX_ID: &str = "integration@mattdownloadmanager.com";
+/// Store IDs an earlier 1.0.0 build registered with Chrome's external-extension key while it was
+/// still the upstream project's: Chrome then installed the *upstream* "Mister Download Manager"
+/// listing. They are removed when the host registers or unregisters, so a browser never keeps
+/// pointing at the old product (nmhost, Windows).
+pub const LEGACY_STORE_IDS: [&str; 1] = ["ejoleppdfgjdndddcjoehopknmlglojp"];
 /// Chrome's update service: an external-install entry naming it makes Chrome offer the store's
 /// extension at its next start (developer.chrome.com, "Alternative extension distribution
 /// options").
@@ -47,7 +52,7 @@ pub fn chromium_ids() -> Vec<&'static str> {
 /// install from it), once it is listed: the listing's own address, its name then its ID.
 pub fn store_page() -> Option<String> {
     store_id()
-        .map(|id| format!("https://chromewebstore.google.com/detail/mister-download-manager/{id}"))
+        .map(|id| format!("https://chromewebstore.google.com/detail/matt-download-manager/{id}"))
 }
 
 /// The tutorial that adds the extension: from the stores, and by hand (a build of its own, or
@@ -55,7 +60,7 @@ pub fn store_page() -> Option<String> {
 /// the interface language (the app's help::page_url).
 pub const GUIDE_DOC: &str = "guide-catch-browser-downloads.md";
 
-/// The help page for a browser that doesn't reach Mister Download Manager, at the section for
+/// The help page for a browser that doesn't reach Matt Download Manager, at the section for
 /// `why` (the native host's reasons, and the app's own checks): its file in docs/ and the
 /// section, as GUIDE_DOC.
 pub fn help_doc(why: &str) -> String {
@@ -126,22 +131,26 @@ mod tests {
     }
 
     /// The store's copy and the app folder's (unpacked) both reach the host: the manifests'
-    /// allowed_origins and the host's own caller check are this list.
+    /// IDs are the ones the host serves. Once a store listing of our own exists it is served too
+    /// (registered with the store's update URL so Chrome installs it by itself); with no listing
+    /// of our own only the unpacked copy is served. The upstream project's store listing is never
+    /// named, offered or registered (1.0.1: an earlier build registered it, and Chrome then
+    /// installed the old product's extension).
     #[test]
-    fn store_and_unpacked_both_served() {
-        assert_eq!(STORE_ID, "ejoleppdfgjdndddcjoehopknmlglojp");
-        assert_eq!(UNPACKED_ID, "oogbclbbninliongijffeeggalppliok");
-        let ids = chromium_ids();
-        assert!(
-            ids.contains(&UNPACKED_ID) && ids.contains(&STORE_ID),
-            "{ids:?}"
-        );
-        assert_eq!(
-            store_page().as_deref(),
-            Some(
-                "https://chromewebstore.google.com/detail/mister-download-manager/ejoleppdfgjdndddcjoehopknmlglojp"
-            )
-        );
+    fn only_the_unpacked_copy_is_served_without_a_store_listing() {
+        assert_eq!(UNPACKED_ID, "pkhbloamkonfkednibekedcckbangkml");
+        match store_id() {
+            None => {
+                assert_eq!(chromium_ids(), vec![UNPACKED_ID]);
+                assert_eq!(store_page(), None);
+            }
+            Some(id) => {
+                assert!(valid_id(id));
+                assert!(chromium_ids().contains(&id));
+                assert!(store_page().is_some_and(|page| page.ends_with(id)));
+            }
+        }
+        assert!(!chromium_ids().iter().any(|id| LEGACY_STORE_IDS.contains(id)));
     }
 
     #[test]

@@ -66,3 +66,18 @@ foreach ($pair in @(@("chromium", "mdm-chromium.zip"), @("firefox", "mdm-firefox
   } finally { $archive.Dispose() }
 }
 "built $out (chromium, firefox, safari, chrome-store, mdm-chromium.zip, mdm-firefox.xpi, mdm-chrome-store.zip; version $version)"
+
+
+# The CRX the installer ships: the Chromium browsers install it themselves as an external
+# extension (the native host points them at this file). Signed with the project's extension key,
+# which must stay outside the repository (D:\mdm\extension-key\private.pem; back it up: the
+# extension's ID depends on it).
+$keyDir = if ($env:MDM_EXTENSION_KEY) { Split-Path -Parent $env:MDM_EXTENSION_KEY } else { Join-Path (Split-Path -Parent $root) "extension-key" }
+$key = if ($env:MDM_EXTENSION_KEY) { $env:MDM_EXTENSION_KEY } else { Join-Path $keyDir "private.pem" }
+if (Test-Path $key) {
+  $crx = Join-Path $out "mattdownloadmanager-extension.crx"
+  & python (Join-Path $PSScriptRoot "crx3.py") (Join-Path $out "chromium") $crx $key
+  if ($LASTEXITCODE) { throw "CRX build failed" }
+} else {
+  Write-Warning "no extension key at ${key}: the CRX is not built (the browsers then need the folder loaded by hand)"
+}

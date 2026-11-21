@@ -1,4 +1,4 @@
-﻿; Mister Download Manager's installer in Estonian: tools/installer/languages.py
+﻿; Matt Download Manager's installer in Estonian: tools/installer/languages.py
 ; (machine-translated; a native speaker may correct any line).
 
 [LangOptions]
@@ -291,8 +291,8 @@ ShutdownBlockReasonUninstallingApp=Eemaldan %1.
 
 [CustomMessages]
 TaskBrowser=Seadista &brauseri integreerimine (Chrome, Edge, Brave, Firefox)
-TaskTorrents=Ava &torrent-failid ja magnetlingid rakendusega Mister Download Manager
-TaskStartup=Käivita Mister Download Manager &Windowsi käivitamisel
+TaskTorrents=Ava &torrent-failid ja magnetlingid rakendusega Matt Download Manager
+TaskStartup=Käivita Matt Download Manager &Windowsi käivitamisel
 TaskGroupOther=Muu:
-Launch=Käivita Mister Download Manager
+Launch=Käivita Matt Download Manager
 KeepData=Kas kustutada ka teie allalaadimiste loend ja sätted?%n%nTeie allalaaditud faile ei puudutata kummalgi juhul.

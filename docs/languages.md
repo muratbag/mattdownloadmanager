@@ -54,8 +54,8 @@ context	source	translation
 
 To send your changes:
 
-- Open a pull request on [GitHub](https://github.com/anefzaoui/misterdownloadmanager) with the edited catalog, or
-- [open an issue](https://github.com/anefzaoui/misterdownloadmanager/issues) describing what should change, if you'd rather not edit the file.
+- Open a pull request on [GitHub](https://github.com/anefzaoui/mattdownloadmanager) with the edited catalog, or
+- [open an issue](https://github.com/anefzaoui/mattdownloadmanager/issues) describing what should change, if you'd rather not edit the file.
 
 ## Next steps
 

@@ -1,6 +1,6 @@
 // The whole browser integration in real browsers, with nothing on the screen: each browser runs
 // headless with its own new profile and loads the extension (target/extension, from pack.ps1);
-// the native messaging host (target/release) hands what it sends to a separate Mister Download
+// the native messaging host (target/release) hands what it sends to a separate Matt Download
 // Manager instance (its own data folder, MDM_DATA_DIR; off the screens, MDM_OFFSCREEN). Each case
 // checks what MDM received (the lab server's request log, the files in MDM's folders, its list
 // through the automation API, its Download video window through UI Automation) and that the
@@ -103,7 +103,7 @@ const proxyLog = [];
 const PAC = `function FindProxyForURL(url, host) { return host === "${PROXY_HOST}" ? "PROXY 127.0.0.1:${PROXY_PORT}" : "DIRECT"; }`;
 // The extension's own address in Firefox (moz-extension://UUID/), fixed in the test profile so
 // its pages (the popup) can be opened in a tab.
-const FIREFOX_ID = "integration@misterdownloadmanager.com";
+const FIREFOX_ID = "integration@mattdownloadmanager.com";
 // The extensions the browsers load: pack.ps1's, or their copies for E2E_HOST_NAME (testHost).
 let chromiumExtension = path.join(root, "target", "extension", "chromium");
 let firefoxExtension = { type: "archivePath", path: path.join(root, "target", "extension", "mdm-firefox.xpi") };
@@ -818,7 +818,7 @@ async function firefox(bin, profile, dl, page, ready) {
   }
 }
 
-// ---- the test instance of Mister Download Manager ----------------------------------------------
+// ---- the test instance of Matt Download Manager ----------------------------------------------
 
 let data = "";
 let downloads = "";
@@ -826,7 +826,7 @@ let downloads = "";
 let ytdlp = "";
 // The ffmpeg the qualities case needs (E2E_FFMPEG, else one on PATH).
 let ffmpeg = "";
-const appExe = exe("misterdownloadmanager");
+const appExe = exe("mattdownloadmanager");
 
 // One command to the instance over its channel (ipc.json), its one-line answer.
 function ipc(cmd, dir = data) {
@@ -876,7 +876,7 @@ function appProcesses() {
     [
       "-NoProfile",
       "-Command",
-      `Get-CimInstance Win32_Process -Filter "Name='misterdownloadmanager.exe'" | Where-Object { $_.ExecutablePath -eq '${p}' -and $_.CommandLine -notlike '*--headless*' } | ForEach-Object { "$($_.ProcessId) $($_.CommandLine -like '*--crash-monitor*')" }`,
+      `Get-CimInstance Win32_Process -Filter "Name='mattdownloadmanager.exe'" | Where-Object { $_.ExecutablePath -eq '${p}' -and $_.CommandLine -notlike '*--headless*' } | ForEach-Object { "$($_.ProcessId) $($_.CommandLine -like '*--crash-monitor*')" }`,
     ],
     { encoding: "utf8" },
   ).stdout;
@@ -916,7 +916,7 @@ async function arrived(file, size, sub = "Compressed", ms = 45000) {
   const want = path.join(downloads, sub, file);
   let last = null;
   try {
-    return await until(`${file} in Mister Download Manager`, ms, async () => {
+    return await until(`${file} in Matt Download Manager`, ms, async () => {
       const item = (await mdmList().catch(() => [])).find((d) => d.file === file);
       last = item || last;
       if (item && item.status === "Error") throw new Error(`${file}: MDM's download failed: ${item.error}`);
@@ -942,11 +942,11 @@ async function requests(p) {
 const clearLog = () => fetch(`${LAB}/_log`, { method: "DELETE" });
 const brief = (e) => `${e.method} ${e.status} ${e.outcome} ${e.range || "-"}`;
 
-// ---- another Mister Download Manager (the remote case, #157) -------------------------------------
+// ---- another Matt Download Manager (the remote case, #157) -------------------------------------
 
 // The server the remote case sends downloads to: E2E_REMOTE_URL names one already running (the
 // Docker image: E2E_REMOTE_PAIR is a command printing a pairing code, `docker exec mdm
-// misterdownloadmanager-cli pair`, and E2E_REMOTE_DOWNLOADS the folder its downloads land in, as
+// mattdownloadmanager-cli pair`, and E2E_REMOTE_DOWNLOADS the folder its downloads land in, as
 // seen from here); else target/release's app runs headless here, on 127.0.0.1, with its own data
 // and download folders under target/e2e.
 const REMOTE_PORT = 18463;
@@ -1363,7 +1363,7 @@ async function videoButton(session, never) {
   if (!show) throw new Error(`no "Show" on the button: ${JSON.stringify(sent)}`);
   if (appWindows(appPid()).includes(VIDEO_WINDOW)) throw new Error("the click opened the Download video window");
   await session.mouse(show.x, show.y, "click");
-  await until("MDM's main window, shown", 10000, () => appWindows(appPid()).some((x) => /^Mister Download Manager/.test(x)));
+  await until("MDM's main window, shown", 10000, () => appWindows(appPid()).some((x) => /^Matt Download Manager/.test(x)));
   await session.mouse(5, 5);
   await sleep(300);
   b = await hover(session, v);
@@ -1764,7 +1764,7 @@ function firefoxVpnExtension() {
       version: "1.0",
       permissions: ["proxy", "<all_urls>"],
       background: { scripts: ["background.js"] },
-      browser_specific_settings: { gecko: { id: "vpn-e2e@misterdownloadmanager.com" } },
+      browser_specific_settings: { gecko: { id: "vpn-e2e@mattdownloadmanager.com" } },
     }),
   );
   fs.writeFileSync(
@@ -2127,7 +2127,7 @@ const CASES = {
 
   // #1058: a .torrent from a tracker's download.php (named by Content-Disposition, sent as
   // application/x-bittorrent) stays with the browser while Torrent settings' "Open magnet links
-  // and .torrent files with Mister Download Manager" is off, as by default, though TORRENT is in
+  // and .torrent files with Matt Download Manager" is off, as by default, though TORRENT is in
   // File types (it is in this run's list); with it on, MDM takes it (its Add torrent fetches it)
   // and the browser keeps nothing.
   async torrents(t) {
@@ -2358,8 +2358,8 @@ const CASES = {
     await t.session.navigate(page);
     const log = path.join(data, "logs", "mdm.log");
     const from = fs.existsSync(log) ? fs.statSync(log).size : 0;
-    const label = "Download all links with Mister Download Manager";
-    const help = "https://misterdownloadmanager.com/help/browser-help.html";
+    const label = "Download all links with Matt Download Manager";
+    const help = "https://mattdownloadmanager.com/help/browser-help.html";
     // The tabs open now (the help page's, when the extension explains a failure).
     const tabs = () =>
       t.kind === "chromium"
@@ -2880,7 +2880,7 @@ const CASES = {
       // The right-click menu on the player (Firefox: its menu can be driven headless).
       if (t.session.menu) {
         done.push(await named(`${kind} menu`, () => streamLookedUp(async () => {
-          const r = await t.session.menu((v.l + v.r) / 2, (v.t + v.b) / 2, "Download with Mister Download Manager");
+          const r = await t.session.menu((v.l + v.r) / 2, (v.t + v.b) / 2, "Download with Matt Download Manager");
           if (!String(r).startsWith("chosen")) throw new Error(`the right-click menu: ${r}`);
           if (process.env.E2E_DEBUG) console.error("menu:", r);
         }, manifest, page, cookie)));
@@ -3013,7 +3013,7 @@ const CASES = {
       if (theirs.length) throw new Error(`refused: ${theirs.map(brief).join("; ")}`);
       if (!mdm.length) throw new Error("no request for the file");
       const said = await until("the popup's word", 5000, () => popup.evaluate(`document.getElementById("media-said").textContent`));
-      if (!/Sent to Mister Download Manager/.test(said)) throw new Error(`the popup said "${said}"`);
+      if (!/Sent to Matt Download Manager/.test(said)) throw new Error(`the popup said "${said}"`);
       // Each stream: the Download video window, for its manifest.
       const pid = appPid();
       const opened = [];
@@ -3207,7 +3207,7 @@ const CASES = {
     try {
       await until("the test instance, in the notification area", 20000, () => mdmList().then(() => true, () => false));
       const pid = appPid();
-      const main = (titles) => titles.filter((x) => /^Mister Download Manager \d/.test(x));
+      const main = (titles) => titles.filter((x) => /^Matt Download Manager \d/.test(x));
       const progress = (titles) => titles.find((x) => /^\d+% /.test(x));
       const at = appWindows(pid);
       if (main(at).length) throw new Error(`started in the notification area, its main window shows (${at.join(", ")})`);
@@ -3762,7 +3762,7 @@ const CASES = {
   // browser can't start it), then put back.
   async reconnect(t) {
     const s = t.session;
-    const nmhost = exe("misterdownloadmanager-nmhost");
+    const nmhost = exe("mattdownloadmanager-nmhost");
     const away = `${nmhost}.e2e-away`;
     const page = `${LAB}/page?video=${encodeURIComponent("/gen/1M/clip.mp4")}`;
     const clip = `${LAB}/gen/1M/clip.mp4`;
@@ -3851,7 +3851,7 @@ const CASES = {
     return `started by the host (pid ${pids[0]})${WIN ? ", off the screens" : ""}, stopped`;
   },
 
-  // #157: Send downloads to → Another Mister Download Manager. The popup pairs with a server (its
+  // #157: Send downloads to → Another Matt Download Manager. The popup pairs with a server (its
   // address and a code); a link clicked then downloads there, into the server's folders, the
   // browser's cookies not sent: neither the browser nor this computer's MDM keeps it. The popup
   // goes back to This computer at the end.
@@ -3918,7 +3918,7 @@ const KNOWN_BUGS = {};
 // Also this account's .torrent and magnet associations (TORRENT_KEYS), which Torrent settings'
 // switch writes (win32.rs set_torrent_handlers): no test instance may touch them (#1058); one
 // changed fails the run, after being put back.
-const HOST = "com.misterdownloadmanager.host";
+const HOST = "com.mattdownloadmanager.host";
 const REG_KEYS = ["HKCU", "HKLM"].flatMap((root) => [
   ...[
     "Software\\Google\\Chrome\\NativeMessagingHosts",
@@ -3928,7 +3928,7 @@ const REG_KEYS = ["HKCU", "HKLM"].flatMap((root) => [
     "Software\\Mozilla\\NativeMessagingHosts",
   ].map((k) => [`${root}\\${k}\\${HOST}`, false]),
   [`${root}\\Software\\Google\\Chrome\\Extensions`, true],
-]).concat([".torrent", "magnet", "MisterDownloadManager.Torrent"].map((k) => [`HKCU\\Software\\Classes\\${k}`, false]));
+]).concat([".torrent", "magnet", "MattDownloadManager.Torrent"].map((k) => [`HKCU\\Software\\Classes\\${k}`, false]));
 const TORRENT_KEYS = new Set(REG_KEYS.filter(([k]) => k.includes("\\Classes\\")).map(([k]) => k));
 
 // Linux and macOS: the host's manifests (`<HOST>.json`) in the home folder's browser folders,
@@ -4045,7 +4045,7 @@ function testHost(name, browsers, nmhost) {
   const write = (kind, more) => {
     const file = path.join(work, "host", `${name}.${kind}.json`);
     fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, JSON.stringify({ name, description: "Mister Download Manager (test)", path: nmhost, type: "stdio", ...more }, null, 2));
+    fs.writeFileSync(file, JSON.stringify({ name, description: "Matt Download Manager (test)", path: nmhost, type: "stdio", ...more }, null, 2));
     manifests[kind] = file;
   };
   if (kinds.has("chromium")) {
@@ -4107,7 +4107,7 @@ async function run() {
     idmRunning = /IDMan\.exe/i.test(idm);
     if (idmRunning && process.env.E2E_IDM_OK !== "1") throw new Error("Internet Download Manager is running: quit it first (it takes the browsers' downloads), or set E2E_IDM_OK=1 if it leaves 127.0.0.1 alone");
   }
-  for (const p of [appExe, exe("misterdownloadmanager-nmhost"), exe("labserver")]) {
+  for (const p of [appExe, exe("mattdownloadmanager-nmhost"), exe("labserver")]) {
     if (!fs.existsSync(p)) throw new Error(`build it first: ${p}`);
   }
   const t0 = Date.now();
@@ -4174,7 +4174,7 @@ async function run() {
   before = new Set(appProcesses().map(([pid]) => pid));
   const server = spawn(exe("labserver"), ["--bind", `127.0.0.1:${PORT}`], { stdio: "ignore", windowsHide: true });
   const proxy = startProxy();
-  const nmhost = exe("misterdownloadmanager-nmhost");
+  const nmhost = exe("mattdownloadmanager-nmhost");
   const results = [];
   let regBefore = null;
   let regCheck = null;
@@ -4187,14 +4187,14 @@ async function run() {
   let testLeft = [];
   try {
     await until("the lab server", 10000, () => fetch(`${LAB}/`).then((r) => r.ok, () => false));
-    // An installed Mister Download Manager's registration is never replaced or removed.
+    // An installed Matt Download Manager's registration is never replaced or removed.
     // Linux and macOS: its manifests (files) are put back byte for byte at the end, so a lab
     // machine's (E2E_REPLACE_HOST=1) may be replaced while the run lasts. E2E_HOST_NAME never
     // touches the real name (testHost), so it runs beside an installed copy.
-    const key = "HKCU\\Software\\Google\\Chrome\\NativeMessagingHosts\\com.misterdownloadmanager.host";
+    const key = "HKCU\\Software\\Google\\Chrome\\NativeMessagingHosts\\com.mattdownloadmanager.host";
     const installed = WIN ? spawnSync("reg", ["query", key], { stdio: "ignore" }).status === 0 : regSnapshot().some((m) => m.bytes) && process.env.E2E_REPLACE_HOST !== "1";
     if (installed && !process.env.E2E_HOST_NAME) {
-      throw new Error("Mister Download Manager's host is already registered (an installed copy): not touching it (E2E_HOST_NAME runs beside it)");
+      throw new Error("Matt Download Manager's host is already registered (an installed copy): not touching it (E2E_HOST_NAME runs beside it)");
     }
     regBefore = regSnapshot(path.join(work, "registry", "before"));
     if (process.env.E2E_HOST_NAME) {

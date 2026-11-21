@@ -744,6 +744,31 @@ fn supervise(
                 }
                 // Named for what it holds (#569): HLS pieces joined without ffmpeg.
                 let f = named_for_content(f);
+                // A conversion must have left the sound file it promised: a missing, empty
+                // or half-written MP3 is a failure, not a completed download; and the
+                // stream it converted from is gone once that file is there.
+                if let Some(audio) = conversion_format(&ours) {
+                    let good = f
+                        .extension()
+                        .is_some_and(|e| e.eq_ignore_ascii_case(audio))
+                        && f.metadata().map(|m| m.len() > 0).unwrap_or(false);
+                    if !good {
+                        let mut p = progress.lock().unwrap();
+                        if p.state != State::Stopped {
+                            p.speed = 0.0;
+                            p.state = State::Failed(format!(
+                                "the {audio} file was not saved as it should be ({})",
+                                f.display()
+                            ));
+                        }
+                        return;
+                    }
+                    if let Some((dir, stem)) = template_of(&ours) {
+                        for p in own_files(&dir, &stem, false) {
+                            let _ = std::fs::remove_file(&p);
+                        }
+                    }
+                }
                 if relaxed_to.is_some()
                     && let Some(q) = quality
                 {
@@ -1286,6 +1311,12 @@ fn kept_parts(dir: &Path, stem: &str, ids: &[String]) -> Vec<PathBuf> {
     }
     kept.sort();
     kept
+}
+
+/// The audio format a conversion run asks for (`--audio-format mp3`), when it converts.
+fn conversion_format(ours: &[String]) -> Option<&str> {
+    let i = ours.iter().position(|a| a == "--audio-format")?;
+    ours.get(i + 1).map(String::as_str)
 }
 
 /// The folder and the file stem of our output template (`-o <dir>/<stem>.%(ext)s`).
@@ -1868,7 +1899,8 @@ const QUALITY: &str = "video:MDMQ %(format_id)s %(resolution)s";
 
 impl VideoJob {
     /// Download `url` in format `selector` to `dir/<stem>.<ext>`; when yt-dlp downloads it by
-    /// itself, at most `rate` bytes/s ([`limit_args`]). `ffmpeg` (its exe) merges separate video and audio into an MP4. `expected`: the size the
+    /// itself, at most `rate` bytes/s ([`limit_args`]). `ffmpeg` (its exe) merges separate video and audio into one file: an MP4 when both go
+    /// into one, an MKV when they don't. `expected`: the size the
     /// choice was shown with (every stream), so the progress starts from the whole. `browser`:
     /// what the browser's request for the page carried (proc::FromBrowser). `subs`: the
     /// subtitles to save with it (#68; none for a sound alone, which has no picture to put them
@@ -1925,8 +1957,12 @@ impl VideoJob {
             return Err(ProcError::PathTooLong(folder.join(stem)));
         }
         let output = folder.join(format!("{}.%(ext)s", template_text(stem)));
-        // An MP3, Opus or FLAC choice (#32, #70): the best sound, converted by ffmpeg.
+        // An MP3 choice (#32): the best sound, downloaded and converted by ffmpeg in one
+        // yt-dlp run. With MDM's engine in between, a conversion was seen to make a
+        // half-length, unplayable MP3 (2026-11-16); the sound is small enough to let yt-dlp
+        // fetch it itself, as it does everywhere else.
         let convert = crate::resolve::audio_conversion(selector);
+        let engine = if convert.is_some() { None } else { engine };
         let format = if convert.is_some() {
             "ba/b".to_owned()
         } else if ffmpeg.is_none() {
@@ -1999,11 +2035,16 @@ impl VideoJob {
         ours.extend(theirs.iter().cloned());
         choose.extend(theirs.iter().cloned());
         if let Some(dir) = ffmpeg.and_then(Path::parent) {
+            // What a merge's file is: an MP4 when both streams go into one, an MKV
+            // when they don't (Opus and VP9 don't), because an MP4 with Opus in it plays
+            // silent in Windows' own players. yt-dlp takes the first container there that
+            // every stream fits (`get_compatible_ext`); mkv has to be in the list, as a pair
+            // no container fits is written into the last one asked for.
             let merge = [
                 "--ffmpeg-location".into(),
                 dir.to_string_lossy().into_owned(),
                 "--merge-output-format".into(),
-                "mp4".into(),
+                "mp4/mkv".into(),
             ];
             ours.extend(merge.clone());
             choose.extend(merge);

@@ -34,7 +34,7 @@ use sha2::{Digest, Sha256};
 
 /// yt-dlp's release signing key, from its repository (`public.key`).
 const YTDLP_KEY: &str = include_str!("../keys/yt-dlp.asc");
-/// Mister Download Manager's release signing key (Ed25519, fingerprint
+/// Matt Download Manager's release signing key (Ed25519, fingerprint
 /// 5826D399249DE856EA087D802E293C28E8A69D74): release.yml signs each release's SHA256SUMS.txt
 /// with it (the MDM_RELEASE_KEY secret), and MDM updates itself only from a list it signed.
 const MDM_KEY: &str = include_str!("../keys/mdm-release.asc");
@@ -154,7 +154,7 @@ pub fn signed_by_ytdlp(sums: &[u8], sig: &[u8]) -> bool {
     signed_by(YTDLP_KEY, sums, sig)
 }
 
-/// Whether `sums` (a release's SHA256SUMS.txt) carries a valid signature `sig` by Mister
+/// Whether `sums` (a release's SHA256SUMS.txt) carries a valid signature `sig` by Matt
 /// Download Manager's release key.
 pub fn signed_by_mdm(sums: &[u8], sig: &[u8]) -> bool {
     if signed_by(MDM_KEY, sums, sig) {
@@ -206,7 +206,7 @@ pub(crate) async fn signed_list(
 }
 
 /// MDM's own name, sent when it fetches its helpers and its updates.
-pub const USER_AGENT: &str = concat!("MisterDownloadManager/", env!("CARGO_PKG_VERSION"));
+pub const USER_AGENT: &str = concat!("MattDownloadManager/", env!("CARGO_PKG_VERSION"));
 
 /// How MDM downloads its helpers and its updates: through its own engine (several connections,
 /// resumable), as MDM itself, through `proxy` (Options → Proxy / Socks).

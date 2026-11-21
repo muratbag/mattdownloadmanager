@@ -89,10 +89,11 @@ pub struct Format {
 pub struct Choice {
     pub label: String,
     /// yt-dlp's `-f` selector: for a video or the sound as the site has it, the very formats the
-    /// line was sized from (`401+251`), then, should the page no longer offer them, the nearest
+    /// line was sized from (`401+140`), then, should the page no longer offer them, the nearest
     /// (#801).
     pub selector: String,
-    /// The container of the result (for the file name).
+    /// The container of the result (for the file name): an MP4 when the streams it downloads go
+    /// into one, an MKV when they don't (Opus, VP9).
     pub ext: String,
     /// The bytes of every stream it downloads (a video's picture and sound), or a conversion's
     /// estimate.
@@ -795,6 +796,44 @@ fn sounds(v: &Video, can_merge: bool) -> Vec<&Format> {
     out
 }
 
+/// Whether `f`'s sound goes into an MP4 as it is: the sound codecs yt-dlp itself weighs when it
+/// picks a merge's container (`get_compatible_ext`: `mp4a`, `aacl`, `ac-4`, `ec-3`). Never Opus
+/// or Vorbis, which an MP4 doesn't hold: asked into one, the picture plays and the sound is
+/// silent in Windows' own players. A sound the site names no codec for is taken by its file type
+/// (an HLS stream's MP4 is AAC).
+fn mp4_sound(f: &Format) -> bool {
+    let codec = f.acodec.as_deref().unwrap_or("").trim().to_ascii_lowercase();
+    match codec.split('.').next().unwrap_or("") {
+        "" | "none" => matches!(
+            f.ext.to_ascii_lowercase().as_str(),
+            "m4a" | "mp4" | "m4v" | "aac"
+        ),
+        first => matches!(first, "mp4a" | "aacl" | "ac-4" | "ec-3"),
+    }
+}
+
+/// Whether `f`'s picture goes into an MP4: the picture codecs yt-dlp weighs for one (`h264`,
+/// `avc1`, `av1`, `hevc`). Not VP9, VP8 or Theora, which it puts in an MKV; nor, as yt-dlp has
+/// it, HEVC as the streams name it (`hev1`, `hvc1`). Only what a line's file will be is told by
+/// it: a line named MKV that yt-dlp saves as MP4 costs its name, which the app corrects from the
+/// saved file (`app::model`), never the download.
+fn mp4_picture(f: &Format) -> bool {
+    let Some(codec) = f.vcodec.as_deref() else {
+        return false;
+    };
+    match codec
+        .trim()
+        .to_ascii_lowercase()
+        .split('.')
+        .next()
+        .unwrap_or("")
+    {
+        // yt-dlp's own name for the streams' `av01` codec (`av01.0.13M.08`), and its plain one.
+        "h264" | "avc1" | "av1" | "av01" | "hevc" => true,
+        _ => false,
+    }
+}
+
 /// One video line before it is labelled: the format it downloads and what it shows.
 struct Line<'a> {
     format: &'a Format,
@@ -826,16 +865,18 @@ fn video_label(
 
 /// The video lines, best first: one for each height, frame rate, codec and range the page
 /// offers (#755: AV1 and VP9 of one height, its HDR and SDR, are each their own), each the very
-/// format it was sized from, merged with the best sound (`audio`) when ffmpeg is there (#801:
-/// the size shown is the size that comes). Without ffmpeg only formats that carry both.
-fn videos(v: &Video, can_merge: bool, audio: Option<&Format>) -> Vec<Choice> {
+/// format it was sized from, merged when ffmpeg is there with a sound out of `sounds` (yt-dlp's
+/// `ba` order, #801: the size shown is the size that comes) — one an MP4 holds when the page has
+/// one (Opus in an MP4 plays silent in Windows' own players), the best one otherwise. Without
+/// ffmpeg only formats that carry both.
+fn videos(v: &Video, can_merge: bool, sounds: &[&Format]) -> Vec<Choice> {
     let candidates = v
         .formats
         .iter()
         .filter(|f| f.video && f.height.is_some() && (can_merge || f.audio));
     // The format that stands for a line: one that comes as a file (an HLS variant's size is
     // its peak bitrate's guess), with an exact size, the bigger; with ffmpeg, a picture alone
-    // (merged with the best sound, not with its own).
+    // (merged with the line's sound, not with its own).
     let better = |a: &Format, b: &Format| {
         (can_merge && !a.audio)
             .cmp(&(can_merge && !b.audio))
@@ -895,8 +936,20 @@ fn videos(v: &Video, can_merge: bool, audio: Option<&Format>) -> Vec<Choice> {
             let f = l.format;
             let h = l.height;
             let range = l.range.or_else(|| hdr.contains(&h).then_some("SDR"));
-            // With its sound: merged with the best one, unless it carries its own.
-            let sound = audio.filter(|_| can_merge && !f.audio);
+            // With its sound: merged with the best one the line can be, unless it carries its
+            // own. An MP4's sound comes first: AAC in an M4A, which Windows' own players open,
+            // rather than the Opus `ba` takes, which an MP4 doesn't hold (written into one, the
+            // picture plays and the sound is silent). A page with no such sound keeps the best
+            // one, and the file is an MKV.
+            let sound = if can_merge && !f.audio {
+                sounds
+                    .iter()
+                    .copied()
+                    .find(|a| mp4_sound(a))
+                    .or_else(|| sounds.first().copied())
+            } else {
+                None
+            };
             let exact = match sound {
                 Some(a) => {
                     (plain_id(&f.id) && plain_id(&a.id)).then(|| format!("{}+{}", f.id, a.id))
@@ -904,16 +957,25 @@ fn videos(v: &Video, can_merge: bool, audio: Option<&Format>) -> Vec<Choice> {
                 None => plain_id(&f.id).then(|| f.id.clone()),
             };
             // Should the page no longer offer that very format (servers left out, #94; a new
-            // look-up's other IDs), the nearest of that height.
-            let near = if can_merge {
-                format!("bv*[height={h}]+ba/b[height={h}]")
-            } else {
-                format!("b[height={h}]")
+            // look-up's other IDs), the nearest of that height: with a sound an MP4 holds when
+            // the line is an MP4, so that the look-up doesn't land on Opus again; the best sound
+            // after it, and then a file that carries its own.
+            let near = match sound {
+                Some(a) if !a.ext.is_empty() && mp4_picture(f) && mp4_sound(a) => format!(
+                    "bv*[height={h}]+ba[ext={}]/bv*[height={h}]+ba/b[height={h}]",
+                    a.ext.to_ascii_lowercase()
+                ),
+                _ if can_merge => format!("bv*[height={h}]+ba/b[height={h}]"),
+                _ => format!("b[height={h}]"),
             };
-            let ext = if can_merge {
-                "mp4".to_owned()
-            } else {
-                f.ext.clone()
+            // The file that comes: an MP4 only when both its picture and its sound go into one,
+            // an MKV when they don't (Opus, VP9), which is what yt-dlp writes for
+            // `--merge-output-format mp4/mkv`. A format that carries its own sound is nothing
+            // merged: its own type.
+            let ext = match sound {
+                Some(a) if mp4_picture(f) && mp4_sound(a) => "mp4".to_owned(),
+                Some(_) => "mkv".to_owned(),
+                None => f.ext.clone(),
             };
             let size = f.size.map(|s| s + sound.and_then(|a| a.size).unwrap_or(0));
             let approx =
@@ -934,15 +996,41 @@ fn videos(v: &Video, can_merge: bool, audio: Option<&Format>) -> Vec<Choice> {
         .collect()
 }
 
-/// The choices, best first: the video lines ([`videos`]), files known only by their type, then
-/// the sound: as the site has it (each type it comes in), and converted to MP3, Opus or FLAC.
-pub fn choices(v: &Video, can_merge: bool) -> Vec<Choice> {
-    let sounds = sounds(v, can_merge);
-    let best_audio = sounds.first().copied();
-    let mut out = videos(v, can_merge, best_audio);
-    // Files whose resolution isn't known (generic sites, a stream's variants with a bitrate
-    // only): offered by type, and by bitrate when there are several, best first. Audio
-    // containers, and streams with no video codec named, aren't videos.
+/// How well a height's line suits the MP4 the Download video window offers: H.264 up to 1080p
+/// (which every Windows player opens), AV1 above it (an MP4, with Windows 11's AV1 support),
+/// another MP4 codec, and last the lines that can only be an MKV (VP9).
+fn height_preference(c: &Choice, height: u32) -> u8 {
+    let mp4 = c.ext.eq_ignore_ascii_case("mp4");
+    let h264 = c.codec.as_deref() == Some("H.264");
+    let av1 = c.codec.as_deref() == Some("AV1");
+    match (mp4, height <= 1080, h264, av1) {
+        (true, true, true, _) => 0,
+        (true, _, _, true) => 1,
+        (true, true, false, false) => 2,
+        (true, false, _, _) => 3,
+        _ => 4,
+    }
+}
+
+/// A height as the list says it: `1080p`, `1440p (2K)`, `2160p (4K)`; with ` · MKV` when the
+/// page offers that height in no file an MP4 holds.
+fn height_label(height: u32, ext: &str) -> String {
+    let mut label = match height {
+        1440 => "1440p (2K)".to_owned(),
+        2160 => "2160p (4K)".to_owned(),
+        4320 => "4320p (8K)".to_owned(),
+        _ => format!("{height}p"),
+    };
+    if !ext.eq_ignore_ascii_case("mp4") {
+        label.push_str(" · MKV");
+    }
+    label
+}
+
+/// Files known only by their type (a generic site, a stream's variants with a bitrate only),
+/// best first, twins once: all a page has when it names no resolution.
+fn plain_files(v: &Video) -> Vec<Choice> {
+    // Audio containers, and streams with no video codec named, aren't videos.
     let mut plain: Vec<&Format> = v
         .formats
         .iter()
@@ -951,12 +1039,12 @@ pub fn choices(v: &Video, can_merge: bool) -> Vec<Choice> {
     plain.sort_by(|a, b| b.tbr.unwrap_or(0.0).total_cmp(&a.tbr.unwrap_or(0.0)));
     let several = plain.len() > 1;
     let mut labels = std::collections::HashSet::new();
+    let mut out: Vec<Choice> = Vec::new();
     for f in plain {
         let label = match f.tbr.filter(|_| several) {
             Some(kbps) => format!("{} {} kbps", f.ext.to_uppercase(), kbps.round()),
             None => f.ext.to_uppercase(),
         };
-        // Twins (the same type and rate under two IDs) once.
         if !labels.insert(label.clone()) {
             continue;
         }
@@ -969,6 +1057,71 @@ pub fn choices(v: &Video, can_merge: bool) -> Vec<Choice> {
             ..Default::default()
         });
     }
+    out
+}
+
+/// The choices the Download video window lists, best first: one line for each height a page
+/// offers, saved as an MP4 when its streams go into one, and the MP3s. Nothing else: neither the
+/// site's WebM variants nor its own sound files, nor Opus or FLAC conversions (the list the
+/// person asked for, 2026-11-16). Without ffmpeg, only what comes as one file: the formats as
+/// they are, and the sound as the site has it (MP3 needs ffmpeg).
+pub fn choices(v: &Video, can_merge: bool) -> Vec<Choice> {
+    let sounds = sounds(v, can_merge);
+    let mut out = videos(v, can_merge, &sounds);
+    if can_merge {
+        // One line per height: the one whose file is the MP4 most players open.
+        let mut best: std::collections::BTreeMap<u32, Choice> = Default::default();
+        for c in out {
+            let Some(h) = c.height else {
+                continue;
+            };
+            let better = best
+                .get(&h)
+                .is_none_or(|old| height_preference(&c, h) < height_preference(old, h));
+            if better {
+                best.insert(h, c);
+            }
+        }
+        out = best
+            .into_values()
+            .rev()
+            .map(|mut c| {
+                c.label = height_label(c.height.unwrap_or(0), &c.ext);
+                c
+            })
+            .collect();
+        // A page that names no resolution (a generic site): the files it has are all there is.
+        if out.is_empty() {
+            out = plain_files(v);
+        }
+        // MP3, converted by ffmpeg from the best sound (#32): its best variable bitrate, then
+        // each constant one. Sizes from the duration (a variable one's is about 245 kbit/s).
+        if v.formats.iter().any(|f| f.audio) {
+            let size = |kbps: u32| v.duration.map(|s| (s * f64::from(kbps) * 125.0) as u64);
+            out.push(Choice {
+                label: format!("{AUDIO_ONLY} MP3 VBR"),
+                selector: format!("{MP3}0"),
+                ext: "mp3".into(),
+                size: size(245),
+                approx: true,
+                ..Default::default()
+            });
+            for kbps in MP3_RATES {
+                out.push(Choice {
+                    label: format!("{AUDIO_ONLY} MP3 {kbps} kbps"),
+                    selector: format!("{MP3}{kbps}"),
+                    ext: "mp3".into(),
+                    size: size(kbps),
+                    approx: true,
+                    kbps: Some(kbps),
+                    ..Default::default()
+                });
+            }
+        }
+        return out;
+    }
+    // Without ffmpeg, the files the page has (by type, by bitrate).
+    out.extend(plain_files(v));
     // The sound as the site has it (#70), each type it comes in once (YouTube's Opus in WEBM,
     // AAC in M4A), the best first: that very format, else the best sound (`ba`).
     // Without ffmpeg an HLS sound only when no other comes; one of no known size only when
@@ -1002,56 +1155,9 @@ pub fn choices(v: &Video, can_merge: bool) -> Vec<Choice> {
             ..Default::default()
         });
     }
-    // MP3, converted by ffmpeg from the best sound (#32): its best variable bitrate, then each
-    // constant one. Sizes from the duration (a variable one's is about 245 kbit/s).
-    let has_audio = v.formats.iter().any(|f| f.audio);
-    if can_merge && has_audio {
-        let size = |kbps: u32| v.duration.map(|s| (s * f64::from(kbps) * 125.0) as u64);
-        out.push(Choice {
-            label: format!("{AUDIO_ONLY} MP3 VBR"),
-            selector: format!("{MP3}0"),
-            ext: "mp3".into(),
-            size: size(245),
-            approx: true,
-            ..Default::default()
-        });
-        for kbps in MP3_RATES {
-            out.push(Choice {
-                label: format!("{AUDIO_ONLY} MP3 {kbps} kbps"),
-                selector: format!("{MP3}{kbps}"),
-                ext: "mp3".into(),
-                size: size(kbps),
-                approx: true,
-                kbps: Some(kbps),
-                ..Default::default()
-            });
-        }
-        // Opus (#70): about the size of the best sound when that is Opus already (it is only
-        // moved into an .opus file), else of a 160 kbit/s encoding.
-        let opus_size = best_audio
-            .filter(|a| a.ext.eq_ignore_ascii_case("webm") || a.ext.eq_ignore_ascii_case("opus"))
-            .and_then(|a| a.size)
-            .or_else(|| size(160));
-        out.push(Choice {
-            label: format!("{AUDIO_ONLY} OPUS"),
-            selector: OPUS.into(),
-            ext: "opus".into(),
-            size: opus_size,
-            approx: true,
-            ..Default::default()
-        });
-        // FLAC (#70): lossless from a lossy source, about 900 kbit/s for 48 kHz stereo.
-        out.push(Choice {
-            label: format!("{AUDIO_ONLY} FLAC"),
-            selector: FLAC.into(),
-            ext: "flac".into(),
-            size: size(900),
-            approx: true,
-            ..Default::default()
-        });
-    }
     out
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -1079,66 +1185,50 @@ mod tests {
         v["format_id"].as_str().unwrap().to_owned()
     }
 
-    /// #801: YouTube's portrait 4K60 video (yt-dlp 2026.08.19): its 3840 lines were one, sized
-    /// from the HLS VP9 variant's peak bitrate (3.79 GB), while yt-dlp downloaded AV1 + Opus
-    /// (532 MB). Each line is now the very formats it downloads, sized from their bytes.
+    /// #801 + the list the person asked for (2026-11-16): yt-dlp's portrait 4K60 video, one
+    /// line per height, each the very format it downloads as an MP4 with the sound an MP4 holds,
+    /// and the MP3s.
     #[test]
     fn the_size_shown_is_the_size_that_comes() {
         let v = parse(PORTRAIT.as_bytes()).unwrap();
         let c = choices(&v, true);
-        assert_eq!(c[0].label, "3840p · AV1 · 60 fps");
-        assert!(
-            c[0].selector
-                .starts_with(&format!("{}/", ytdlp_pick(PORTRAIT)))
+        // 3840 high (a portrait video): AV1 + 140 (AAC), not Opus.
+        assert_eq!(c[0].label, "3840p");
+        assert_eq!(
+            c[0].selector,
+            "401+140/bv*[height=3840]+ba[ext=m4a]/bv*[height=3840]+ba/b[height=3840]"
         );
-        assert_eq!(c[0].selector, "401+251/bv*[height=3840]+ba/b[height=3840]");
-        assert_eq!(c[0].size, Some(555_978_141 + 2_113_634));
+        assert_eq!(c[0].size, Some(555_978_141 + 2_934_637));
         assert!(!c[0].approx);
-        // The VP9 one of that height is its own line, from the file (315), not the HLS
-        // variant's estimate (628).
-        assert_eq!(c[1].label, "3840p · VP9 · 60 fps");
-        assert_eq!(c[1].selector, "315+251/bv*[height=3840]+ba/b[height=3840]");
-        assert_eq!(c[1].size, Some(1_144_096_984 + 2_113_634));
-        assert!(c.iter().all(|c| !c.selector.starts_with("628")));
-        // One line for each height, frame rate and codec; every one exact but a variant that
-        // only comes as HLS (602, VP9 at 15 fps), said to be about.
+        // The next height down, the very formats it was sized from.
+        assert_eq!(c[1].label, "2560p");
+        assert_eq!(
+            c[1].selector,
+            "400+140/bv*[height=2560]+ba[ext=m4a]/bv*[height=2560]+ba/b[height=2560]"
+        );
         let videos: Vec<&Choice> = c.iter().filter(|c| c.height.is_some()).collect();
-        assert_eq!(videos.len(), 23);
-        let about: Vec<&str> = videos
-            .iter()
-            .filter(|c| c.approx)
-            .map(|c| c.label.as_str())
-            .collect();
-        assert_eq!(about, ["256p · VP9 · 15 fps"]);
+        assert_eq!(videos.len(), 8);
+        assert!(videos.iter().all(|c| !c.approx));
         let mut seen = std::collections::HashSet::new();
         assert!(
             videos.iter().all(|c| seen.insert(&c.label)),
             "no twin lines"
         );
-        // The sound as the site has it: YouTube's Opus (what `ba` takes), then its AAC.
-        let sound: Vec<(&str, &str, Option<u32>)> = c
+        assert!(c.iter().all(|c| !c.selector.starts_with("628")));
+        // The sound only as MP3: no WebM lines, no "Audio only original", no Opus or FLAC.
+        let audio: Vec<&str> = c
             .iter()
-            .filter(|c| original_sound(&c.selector))
-            .map(|c| (c.label.as_str(), c.selector.as_str(), c.kbps))
+            .filter(|c| audio_conversion(&c.selector).is_some())
+            .map(|c| c.selector.as_str())
             .collect();
-        assert_eq!(
-            sound,
-            [
-                ("Audio only original WEBM", "251/ba", Some(93)),
-                ("Audio only original M4A", "140/ba", Some(130))
-            ]
-        );
-        // Conversions are estimates.
-        assert!(
-            c.iter()
-                .filter(|c| audio_conversion(&c.selector).is_some())
-                .all(|c| c.approx)
-        );
+        assert_eq!(audio, ["mp3:0", "mp3:320", "mp3:256", "mp3:192", "mp3:128"]);
+        assert!(c.iter().filter(|c| c.height.is_none()).all(|c| c.ext == "mp3"));
+        assert!(c.iter().all(|c| !original_sound(&c.selector)));
     }
 
-    /// #755: a 4K60 HDR video: AV1 and VP9 in HDR, VP9 in SDR, each its own line, the one
-    /// yt-dlp picks by itself first; SDR said where the height has HDR too. DRC sounds (YouTube's
-    /// quieter copies) are never the one merged.
+    /// A 4K60 HDR video (#755): one line per height, the most MP4-friendly of it — AV1 above
+    /// 1080p, H.264 up to it — so every file it downloads is an MP4 with AAC. DRC sounds
+    /// (YouTube's quieter copies) are never the one merged.
     #[test]
     fn codec_frame_rate_and_hdr_lines() {
         let v = parse(HDR.as_bytes()).unwrap();
@@ -1152,33 +1242,35 @@ mod tests {
             top,
             [
                 (
-                    "2160p · AV1 · 60 fps · HDR",
-                    "701+251/bv*[height=2160]+ba/b[height=2160]"
+                    "2160p (4K)",
+                    "701+140/bv*[height=2160]+ba[ext=m4a]/bv*[height=2160]+ba/b[height=2160]"
                 ),
                 (
-                    "2160p · VP9 · 60 fps · HDR",
-                    "337+251/bv*[height=2160]+ba/b[height=2160]"
+                    "1440p (2K)",
+                    "700+140/bv*[height=1440]+ba[ext=m4a]/bv*[height=1440]+ba/b[height=1440]"
                 ),
                 (
-                    "2160p · VP9 · 60 fps · SDR",
-                    "315+251/bv*[height=2160]+ba/b[height=2160]"
+                    "1080p",
+                    "299+140/bv*[height=1080]+ba[ext=m4a]/bv*[height=1080]+ba/b[height=1080]"
                 ),
             ]
         );
-        assert!(c[0].selector.starts_with(&format!("{}/", ytdlp_pick(HDR))));
+        // The picture is yt-dlp's own pick's (`format_id` `701+251`: its `bv*+ba`, with Opus);
+        // the line takes it with the sound an MP4 holds, 140 (AAC).
+        let picture = ytdlp_pick(HDR);
+        let picture = picture.split('+').next().unwrap();
+        assert!(c[0].selector.starts_with(&format!("{picture}+140/")));
         assert_eq!(
             (c[0].codec.as_deref(), c[0].fps, c[0].range.as_deref()),
             (Some("AV1"), Some(60), Some("HDR"))
         );
-        assert_eq!(c[2].range.as_deref(), Some("SDR"));
-        assert_eq!(c[0].size, Some(303_941_999 + 1_612_962));
+        assert_eq!(c[0].size, Some(303_941_999 + 1_640_706));
         assert!(c.iter().all(|c| !c.selector.contains("-drc")));
-        let h264: Vec<&str> = c
+        let h264 = c
             .iter()
-            .filter(|c| c.codec.as_deref() == Some("H.264"))
-            .map(|c| c.label.as_str())
-            .collect();
-        assert_eq!(h264[0], "1080p · H.264 · 60 fps · SDR");
+            .find(|c| c.codec.as_deref() == Some("H.264"))
+            .expect("a H.264 line");
+        assert_eq!((h264.label.as_str(), h264.height), ("1080p", Some(1080)));
         // Without ffmpeg YouTube has no format with both: only the sound.
         assert!(choices(&v, false).iter().all(|c| c.height.is_none()));
     }
@@ -1226,8 +1318,50 @@ mod tests {
             {"format_id": "a/b", "ext": "mp4", "height": 720, "vcodec": "avc1", "acodec": "none", "filesize": 10},
             {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a", "filesize": 1}]}"#;
         let c = choices(&parse(page.as_bytes()).unwrap(), true);
-        assert_eq!(c[0].selector, "bv*[height=720]+ba/b[height=720]");
+        // The sound an MP4 holds leads the nearest: the look-up can't land on Opus again.
+        assert_eq!(
+            c[0].selector,
+            "bv*[height=720]+ba[ext=m4a]/bv*[height=720]+ba/b[height=720]"
+        );
         assert!(c[0].approx);
+    }
+
+    /// Opus in an MP4 plays silent in Windows' own players: a line whose page has an AAC sound
+    /// is merged with it and named MP4; a page whose only sound is Opus is merged all the same,
+    /// into an MKV, which its sound plays in.
+    #[test]
+    fn a_merged_line_takes_a_sound_an_mp4_holds() {
+        let page = r#"{"title": "T", "formats": [
+            {"format_id": "299", "ext": "mp4", "height": 1080, "vcodec": "avc1", "acodec": "none", "filesize": 100},
+            {"format_id": "774", "ext": "webm", "vcodec": "none", "acodec": "opus", "filesize": 20},
+            {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a.40.2", "filesize": 30}]}"#;
+        let v = parse(page.as_bytes()).unwrap();
+        let c = choices(&v, true);
+        assert_eq!(c[0].label, "1080p");
+        assert_eq!(
+            c[0].selector,
+            "299+140/bv*[height=1080]+ba[ext=m4a]/bv*[height=1080]+ba/b[height=1080]"
+        );
+        assert_eq!(c[0].ext, "mp4");
+        assert_eq!(c[0].size, Some(130));
+        // A page whose only sound is Opus: merged with it, into an MKV.
+        let opus = r#"{"title": "T", "formats": [
+            {"format_id": "299", "ext": "mp4", "height": 1080, "vcodec": "avc1", "acodec": "none", "filesize": 100},
+            {"format_id": "774", "ext": "webm", "vcodec": "none", "acodec": "opus", "filesize": 20}]}"#;
+        let c = choices(&parse(opus.as_bytes()).unwrap(), true);
+        assert_eq!(c[0].label, "1080p · MKV");
+        assert_eq!(
+            c[0].selector,
+            "299+774/bv*[height=1080]+ba/b[height=1080]"
+        );
+        assert_eq!(c[0].ext, "mkv");
+        // A VP9 picture and an AAC sound still don't go into one MP4: an MKV.
+        let vp9 = r#"{"title": "T", "formats": [
+            {"format_id": "315", "ext": "webm", "height": 2160, "vcodec": "vp9", "acodec": "none", "filesize": 100},
+            {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a.40.2", "filesize": 30}]}"#;
+        let c = choices(&parse(vp9.as_bytes()).unwrap(), true);
+        assert_eq!(c[0].label, "2160p (4K) · MKV");
+        assert_eq!(c[0].ext, "mkv");
     }
 
     /// The size is about when the site only guesses it (`filesize_approx`), or it comes from
@@ -1337,8 +1471,8 @@ mod tests {
         assert_eq!(
             sizes,
             [
-                ("720p · MP4".to_owned(), Some(187_500_000)),
-                ("360p · MP4".to_owned(), Some(60_000_000))
+                ("720p".to_owned(), Some(187_500_000)),
+                ("360p".to_owned(), Some(60_000_000))
             ]
         );
         let live = HLS.replace(r#""duration": 600, "#, "");
@@ -1382,27 +1516,19 @@ mod tests {
         assert_eq!(
             labels,
             [
-                "1080p · H.264 · 60 fps",
-                "720p · H.264 · 30 fps",
-                "360p · H.264",
-                "Audio only original M4A",
+                "1080p",
+                "720p",
+                "360p",
                 "Audio only MP3 VBR",
                 "Audio only MP3 320 kbps",
                 "Audio only MP3 256 kbps",
                 "Audio only MP3 192 kbps",
                 "Audio only MP3 128 kbps",
-                "Audio only OPUS",
-                "Audio only FLAC",
             ]
         );
-        // Opus from M4A is encoded (160 kbit/s); FLAC about 900 kbit/s (61.5 s).
-        let opus = &merged[merged.len() - 2];
-        assert_eq!((opus.selector.as_str(), opus.size), (OPUS, Some(1_230_000)));
-        let flac = &merged[merged.len() - 1];
-        assert_eq!((flac.selector.as_str(), flac.size), (FLAC, Some(6_918_750)));
         assert_eq!(merged[0].size, Some(61_000_000), "video + best audio");
         // MP3 (#32): converted from the best sound, sized from the duration (61.5 s).
-        let mp3 = &merged[5];
+        let mp3 = &merged[4];
         assert_eq!(
             (mp3.selector.as_str(), mp3.ext.as_str()),
             ("mp3:320", "mp3")
@@ -1542,7 +1668,7 @@ mod tests {
         assert_eq!(without, ["Audio only original M4A"]);
         assert!(needs_merging(&v));
         let with: Vec<String> = choices(&v, true).into_iter().map(|c| c.label).collect();
-        assert_eq!(&with[..2], ["1080p · H.264", "360p · H.264"]);
+        assert_eq!(&with[..2], ["1080p", "360p"]);
         // A format carrying both, as good as any video: nothing more to get from merging.
         let muxed = r#"{"title": "T", "formats": [
             {"format_id": "18", "ext": "mp4", "height": 360, "vcodec": "avc1", "acodec": "mp4a"},
@@ -1567,7 +1693,10 @@ mod tests {
         let without = choices(&v, false);
         assert_eq!(without[0].label, "Audio only original M4A");
         assert_eq!(without[0].size, Some(900));
-        assert_eq!(choices(&v, true)[0].size, Some(2000));
+        // With ffmpeg that sound is offered as MP3 only (the list's one sound format).
+        let with = choices(&v, true);
+        assert_eq!(with[0].ext, "mp3");
+        assert_eq!(with[0].size, None);
         assert_eq!(without_remuxing("ba"), "ba[protocol!*=m3u8]/ba");
         assert_eq!(
             without_remuxing("b[height=360]"),

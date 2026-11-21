@@ -140,11 +140,61 @@ pub fn refresh_ytdlp(rt: &tokio::runtime::Handle) {
         return;
     }
     rt.spawn(async move {
-        if let Err(e) = mdm_tools::install_latest(&dir, &crate::settings::own_net(), None).await {
-            eprintln!("yt-dlp update check: {e}"); // not translated: a log line
+        match mdm_tools::install_latest(&dir, &crate::settings::own_net(), None).await {
+            Ok(i) => tracing::info!("video helpers: yt-dlp {} checked and current", i.version),
+            Err(e) => eprintln!("yt-dlp update check: {e}"), // not translated: a log line
         }
     });
 }
+
+/// Keep ffmpeg current, but rarely: its builds are republished almost daily and are about 80 MB,
+/// so only a copy more than [`FFMPEG_MAX_AGE_DAYS`] old is refreshed. Once per session.
+/// ffmpeg is needed to merge a video's separate picture and sound; an old one keeps working, so a
+/// failed check changes nothing.
+pub fn refresh_ffmpeg(rt: &tokio::runtime::Handle) {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    static DONE: AtomicBool = AtomicBool::new(false);
+    const FFMPEG_MAX_AGE_DAYS: i64 = 45;
+    let Some(dir) = mdm_tools::tools_dir() else {
+        return;
+    };
+    // Chosen by the person: theirs to update (install_latest returns it untouched anyway).
+    let Some(current) = mdm_tools::ffmpeg::installed(&dir) else {
+        return;
+    };
+    if DONE.swap(true, Ordering::SeqCst) {
+        return;
+    }
+    // The version is "<line>.<build date>", e.g. 9.0.20261028: the date is the last part.
+    let Some(stamp) = current
+        .version
+        .rsplit('.')
+        .next()
+        .and_then(|d| d.parse::<i32>().ok())
+    else {
+        return;
+    };
+    let Some(built) = chrono::NaiveDate::from_ymd_opt(
+        stamp / 10000,
+        ((stamp / 100) % 100) as u32,
+        (stamp % 100) as u32,
+    ) else {
+        return;
+    };
+    let age = chrono::Utc::now().date_naive() - built;
+    if age.num_days() < FFMPEG_MAX_AGE_DAYS {
+        return;
+    }
+    tracing::info!("video helpers: ffmpeg {} is {} days old, refreshing", current.version, age.num_days());
+    rt.spawn(async move {
+        match mdm_tools::ffmpeg::install_latest(&dir, &crate::settings::own_net(), None).await {
+            Ok(i) => tracing::info!("video helpers: ffmpeg {} installed", i.version),
+            Err(e) => eprintln!("ffmpeg update check: {e}"), // not translated: a log line
+        }
+    });
+}
+
+/// The installed ffmpeg in `dir` (a tiny shim so the caller above reads like the yt-dlp one).
 
 fn tools() -> Tools {
     let dir = mdm_tools::tools_dir();

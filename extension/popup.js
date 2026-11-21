@@ -1,11 +1,11 @@
-// The toolbar button's popup: whether the browser reaches Mister Download Manager (and, when it
+// The toolbar button's popup: whether the browser reaches Matt Download Manager (and, when it
 // doesn't, a link to the help page's section for why), pausing capture, leaving the current
 // site to the browser, opening the app or its Options, and the media the tab loaded (#38), each
 // to download. background.js does the work.
 const ext = globalThis.browser ?? globalThis.chrome;
-const HELP = "https://misterdownloadmanager.com/help/browser-help.html";
+const HELP = "https://idm.teachermatt.com/help/browser-help.html";
 // The creator's GitHub Sponsors page (the app's Help → Support MDM): a plain link, in a new tab.
-const SPONSORS = "https://github.com/sponsors/anefzaoui";
+const SPONSORS = "https://github.com/sponsors/mattdownloadmanager";
 const t = (key, ...subs) => ext.i18n.getMessage(key, subs) || key;
 const $ = (id) => document.getElementById(id);
 const ask = (m) => ext.runtime.sendMessage(m).catch(() => ({ ok: false }));

@@ -1834,7 +1834,7 @@ mod tests {
     }
 
     /// The timings in #1063's pull request (`cargo test -p mdm-app --release --bin
-    /// misterdownloadmanager grabber::tests::timings_1063 -- --ignored --nocapture`): adding the
+    /// mattdownloadmanager grabber::tests::timings_1063 -- --ignored --nocapture`): adding the
     /// links (a paste: its text read too), one frame's eight answers that renamed a link, and
     /// a frame of the window, for a big page's links and for the report's pasted list.
     #[test]

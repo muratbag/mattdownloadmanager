@@ -1,12 +1,12 @@
 {
   "name": {
-    "message": "Mister Download Manager"
+    "message": "Matt Download Manager"
   },
   "description": {
-    "message": "Предаје преузимања из прегледача програму Mister Download Manager."
+    "message": "Предаје преузимања из прегледача програму Matt Download Manager."
   },
   "menu": {
-    "message": "Преузми помоћу Mister Download Manager"
+    "message": "Преузми помоћу Matt Download Manager"
   },
   "video_download": {
     "message": "Преузми видео"
@@ -30,19 +30,19 @@
     "message": "Подешавања дугмета..."
   },
   "video_sent": {
-    "message": "Послато апликацији Mister Download Manager"
+    "message": "Послато апликацији Matt Download Manager"
   },
   "menu_selected": {
-    "message": "Преузми изабране везе помоћу Mister Download Manager"
+    "message": "Преузми изабране везе помоћу Matt Download Manager"
   },
   "menu_all": {
-    "message": "Преузми све везе помоћу Mister Download Manager"
+    "message": "Преузми све везе помоћу Matt Download Manager"
   },
   "status_connected": {
-    "message": "Повезано са Mister Download Manager"
+    "message": "Повезано са Matt Download Manager"
   },
   "status_connected_version": {
-    "message": "Повезано са Mister Download Manager $version$",
+    "message": "Повезано са Matt Download Manager $version$",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -54,22 +54,22 @@
     "message": "Паузирано: преузимања остају у прегледачу"
   },
   "status_not_installed": {
-    "message": "Mister Download Manager није инсталиран, или његова интеграција прегледача није подешена"
+    "message": "Matt Download Manager није инсталиран, или његова интеграција прегледача није подешена"
   },
   "status_forbidden": {
-    "message": "Mister Download Manager не прихвата ову копију проширења"
+    "message": "Matt Download Manager не прихвата ову копију проширења"
   },
   "status_not_running": {
-    "message": "Mister Download Manager није покренут на време"
+    "message": "Matt Download Manager није покренут на време"
   },
   "status_host_failed": {
-    "message": "Веза са апликацијом Mister Download Manager није успела"
+    "message": "Веза са апликацијом Matt Download Manager није успела"
   },
   "status_too_large": {
     "message": "Детаљи овог преузимања били су превелики за прослеђивање"
   },
   "status_update_app": {
-    "message": "Ажурирајте Mister Download Manager да бисте користили све што ова екстензија нуди"
+    "message": "Ажурирајте Matt Download Manager да бисте користили све што ова екстензија нуди"
   },
   "popup_take": {
     "message": "Преузимајте помоћу ове апликације"
@@ -78,10 +78,10 @@
     "message": "Шаљите преузимања преко проксија или VPN проширења овог прегледача"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager затим преузима датотеке преко истог проксија као и овај прегледач. Прегледач ће вас једном питати да ли то дозвољавате; искључивањем ове опције повлачите дозволу."
+    "message": "Matt Download Manager затим преузима датотеке преко истог проксија као и овај прегледач. Прегледач ће вас једном питати да ли то дозвољавате; искључивањем ове опције повлачите дозволу."
   },
   "popup_proxy_title_chromium": {
-    "message": "Mister Download Manager тада преузима преко истог проксија као и овај прегледач. Док је ово искључено, проширење не чита прокси прегледача."
+    "message": "Matt Download Manager тада преузима преко истог проксија као и овај прегледач. Док је ово искључено, проширење не чита прокси прегледача."
   },
   "popup_exclude_site": {
     "message": "Никада не преузимај са $site$",
@@ -105,7 +105,7 @@
     }
   },
   "popup_open": {
-    "message": "Отвори Mister Download Manager"
+    "message": "Отвори Matt Download Manager"
   },
   "popup_options": {
     "message": "Опције..."
@@ -150,7 +150,7 @@
     "message": "Користи напредну интеграцију прегледача је искључено у Опцијама → Опште."
   },
   "declined_torrents": {
-    "message": "То је торент, а опција „Отвори магнетне везе и .torrent датотеке помоћу Mister Download Manager“ је искључена у подешавањима торената."
+    "message": "То је торент, а опција „Отвори магнетне везе и .torrent датотеке помоћу Matt Download Manager“ је искључена у подешавањима торената."
   },
   "declined_site_access": {
     "message": "Проширењу није дозвољено да чита овај сајт (приступ сајту прегледача)."
@@ -195,16 +195,16 @@
     "message": "Овде нема видео снимка за преузимање"
   },
   "video_playlist": {
-    "message": "Листа видео снимака: изаберите их у Mister Download Manager"
+    "message": "Листа видео снимака: изаберите их у Matt Download Manager"
   },
   "video_no_ytdlp": {
-    "message": "Mister Download Manager треба yt-dlp за овај видео снимак"
+    "message": "Matt Download Manager треба yt-dlp за овај видео снимак"
   },
   "video_too_long": {
     "message": "Тражење је трајало предуго"
   },
   "video_busy": {
-    "message": "Mister Download Manager је заузет другим видео снимцима"
+    "message": "Matt Download Manager је заузет другим видео снимцима"
   },
   "video_queued": {
     "message": "Додато у ред"
@@ -228,7 +228,7 @@
     "message": "Овај рачунар"
   },
   "popup_send_remote": {
-    "message": "Други Mister Download Manager (сервер)"
+    "message": "Други Matt Download Manager (сервер)"
   },
   "popup_remote_code": {
     "message": "Кôд за упаривање"
@@ -240,7 +240,7 @@
     "message": "Упари"
   },
   "popup_remote_help": {
-    "message": "Отворите његову адресу једном и прихватите његов сертификат, па унесите кôд из његових Опција, Удаљено, Упари уређај (или misterdownloadmanager-cli pair)."
+    "message": "Отворите његову адресу једном и прихватите његов сертификат, па унесите кôд из његових Опција, Удаљено, Упари уређај (или mattdownloadmanager-cli pair)."
   },
   "status_remote": {
     "message": "Преузимања иду на $address$",
@@ -324,7 +324,7 @@
     "message": "Сви квалитети и преводи..."
   },
   "video_failed": {
-    "message": "Mister Download Manager није инсталиран или није покренут"
+    "message": "Matt Download Manager није инсталиран или није покренут"
   },
   "video_download_best": {
     "message": "Преузми најбоље"

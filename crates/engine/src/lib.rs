@@ -1,4 +1,4 @@
-//! Mister Download Manager download engine. See notes/ENGINE.md.
+//! Matt Download Manager download engine. See notes/ENGINE.md.
 
 pub mod agent;
 mod browserlike;

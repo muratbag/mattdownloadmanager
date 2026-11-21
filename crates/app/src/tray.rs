@@ -434,7 +434,7 @@ impl Native {
         };
         add(
             &menu,
-            crate::i18n::mark("Open Mister Download Manager"),
+            crate::i18n::mark("Open Matt Download Manager"),
             TrayCmd::Show,
         );
         menu.append(&PredefinedMenuItem::separator()).ok();

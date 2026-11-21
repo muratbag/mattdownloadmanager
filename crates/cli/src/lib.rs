@@ -1,6 +1,6 @@
-//! `misterdownloadmanager-cli`'s commands. The app's program carries them (#25: one download
-//! engine shipped, not two): `misterdownloadmanager-cli` (main.rs) is a small launcher that runs
-//! `misterdownloadmanager --cli <arguments>`, and the app's `main` hands those to [`main`].
+//! `mattdownloadmanager-cli`'s commands. The app's program carries them (#25: one download
+//! engine shipped, not two): `mattdownloadmanager-cli` (main.rs) is a small launcher that runs
+//! `mattdownloadmanager --cli <arguments>`, and the app's `main` hands those to [`main`].
 
 use std::ffi::OsString;
 use std::io::Write;
@@ -18,10 +18,10 @@ use serde_json::json;
 #[derive(Parser)]
 #[command(
     version,
-    about = "Mister Download Manager command line",
-    long_about = "Mister Download Manager command line: downloads, videos and torrents without the \
+    about = "Matt Download Manager command line",
+    long_about = "Matt Download Manager command line: downloads, videos and torrents without the \
                   window, and the running app's automation API. Guide: \
-                  https://misterdownloadmanager.com/help/command-line.html"
+                  https://idm.teachermatt.com/help/command-line.html"
 )]
 struct Cli {
     /// Print JSON for programs: one object per line (`progress` events, then `done`, `paused`
@@ -321,7 +321,7 @@ impl std::error::Error for Reported {}
 /// `{"error"}` answer fails the command.
 fn ask(cmd: mdm_ipc::Command) -> anyhow::Result<()> {
     let answer = mdm_ipc::request(&cmd)
-        .map_err(|e| anyhow::anyhow!("Mister Download Manager isn't running ({e})"))?;
+        .map_err(|e| anyhow::anyhow!("Matt Download Manager isn't running ({e})"))?;
     println!("{answer}");
     if serde_json::from_str::<mdm_ipc::api::ErrorAnswer>(&answer).is_ok() {
         return Err(Reported.into());
@@ -335,7 +335,7 @@ fn pair() -> anyhow::Result<()> {
         pair: true,
         ..Default::default()
     })
-    .map_err(|e| anyhow::anyhow!("Mister Download Manager isn't running ({e})"))?;
+    .map_err(|e| anyhow::anyhow!("Matt Download Manager isn't running ({e})"))?;
     match mdm_ipc::api::parse::<mdm_ipc::api::PairAnswer>(&answer).map_err(anyhow::Error::msg)? {
         Ok(a) => {
             println!("{}", a.qr);
@@ -376,12 +376,12 @@ pub const FLAG: &str = "--cli";
 /// section on installing one.
 fn js_runtime_note() -> String {
     "YouTube needs a JavaScript runtime to list its video qualities: install Node.js or Deno, \
-     then look it up again (https://misterdownloadmanager.com/help/video.html#javascript-runtime)"
+     then look it up again (https://idm.teachermatt.com/help/video.html#javascript-runtime)"
         .into()
 }
 
 /// The launcher's name, which the commands' help and messages show.
-pub const NAME: &str = "misterdownloadmanager-cli";
+pub const NAME: &str = "mattdownloadmanager-cli";
 
 /// The app's program, started for the command line.
 pub struct Launch {
@@ -427,7 +427,7 @@ pub fn launched(args: Vec<OsString>) -> Option<Launch> {
     })
 }
 
-/// Run the command line `args` (without the program's name): what `misterdownloadmanager-cli`
+/// Run the command line `args` (without the program's name): what `mattdownloadmanager-cli`
 /// does, its output, and its exit code (1 when a command fails).
 pub fn main(args: Vec<OsString>) -> ExitCode {
     main_with(args, None)
@@ -1497,7 +1497,7 @@ mod tests {
         assert!(launched(args(&["mdm", "--cli=x"])).is_none());
         assert!(launched(args(&["mdm", "--client"])).is_none());
         // A link named as the launcher (Linux and macOS).
-        let named = launched(args(&["/usr/bin/misterdownloadmanager-cli", "status"]));
+        let named = launched(args(&["/usr/bin/mattdownloadmanager-cli", "status"]));
         assert_eq!(named.is_some(), cfg!(unix));
     }
 }

@@ -1,7 +1,7 @@
-//! Mister Download Manager's browser native messaging host (Chrome, Edge, Brave, Firefox).
+//! Matt Download Manager's browser native messaging host (Chrome, Edge, Brave, Firefox).
 //!
 //! - Started by the browser: reads native messages (u32 LE length + JSON) from stdin, hands each
-//!   download to the running Mister Download Manager over mdm-ipc (starting Mister Download Manager if needed), answers
+//!   download to the running Matt Download Manager over mdm-ipc (starting Matt Download Manager if needed), answers
 //!   `{"ok": …}`. A download Options says to leave to the browser (file type, excluded site or
 //!   address, browser, integration off: `mdm_ipc::capture`) is answered `{"ok": false}` without
 //!   starting anything, and the extension lets the browser have it. `{"rules": true}` asks for
@@ -23,7 +23,7 @@
 //!   handed over as one list. A list longer than a message may be (`mdm_ipc::MAX_MESSAGE`, 1 MB)
 //!   comes in parts, each with `"linksPart": {batch, index, count}` and the page's context, each
 //!   handed over as it comes; the app puts them back together (crates/app/src/linkparts.rs).
-//! - `misterdownloadmanager-nmhost --register` / `--unregister`: writes / removes the host
+//! - `mattdownloadmanager-nmhost --register` / `--unregister`: writes / removes the host
 //!   manifests (Chromium's names the extension's origin, Firefox's its add-on ID). Windows: beside
 //!   this exe, with the per-user (HKCU) registry entries the browsers look up; with `--all-users`
 //!   (the installer, installing for everyone, elevated) under HKLM instead. Linux and macOS: in
@@ -31,18 +31,18 @@
 //!   installer step), or the system-wide ones with `--all-users`. A browser that reads a
 //!   system-wide manifest naming this same program (the .deb's or .rpm's) gets none in the home
 //!   folder: the package manager removes the package's with it (#266).
-//! - `misterdownloadmanager-nmhost --repair`: what the app runs at its start (#818): a browser's
+//! - `mattdownloadmanager-nmhost --repair`: what the app runs at its start (#818): a browser's
 //!   registration that leads nowhere (its manifest or helper gone: a copy run from inside a zip,
 //!   moved or deleted) is pointed at this copy, for this user; one that works is left alone,
 //!   whichever copy it names. Windows adds none where there was none (the setup's box); Linux
 //!   and macOS write one for a browser without it, as `--register` does.
 //! - Neither registers a copy in a temporary folder (an archive run without extracting it first,
 //!   whose tool deletes the folder afterwards), nor a portable one.
-//! - `misterdownloadmanager-nmhost --safari` (macOS): the same host for Safari, started by the
+//! - `mattdownloadmanager-nmhost --safari` (macOS): the same host for Safari, started by the
 //!   app's Safari extension (tools/safari), which passes each message on; nothing to register.
-//! - `misterdownloadmanager-nmhost --package-manifests <root>` (Linux, the .deb and .rpm build):
+//! - `mattdownloadmanager-nmhost --package-manifests <root>` (Linux, the .deb and .rpm build):
 //!   writes the system-wide manifests under `<root>`, naming the packaged helper
-//!   (`/usr/bin/misterdownloadmanager-nmhost`). Nothing else.
+//!   (`/usr/bin/mattdownloadmanager-nmhost`). Nothing else.
 
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
@@ -56,7 +56,7 @@ mod win32;
 use mdm_ipc::browsers::HOST_NAME;
 #[cfg(windows)]
 use mdm_ipc::browsers::{Family, Holder, Repair, WINDOWS_HOST_KEYS};
-use mdm_ipc::extension::{FIREFOX_ID, STORE_ID, chromium_ids, store_id};
+use mdm_ipc::extension::{FIREFOX_ID, STORE_ID, UNPACKED_ID, chromium_ids, store_id};
 
 /// Chrome's external extensions: an entry naming the store's extension makes Chrome offer it at
 /// its next start ("New extension added"), the user turning it on there. HKLM's is read from the
@@ -65,6 +65,22 @@ use mdm_ipc::extension::{FIREFOX_ID, STORE_ID, chromium_ids, store_id};
 /// is offered there (#685), the app's window opens the store's page in Helium instead.
 #[cfg(windows)]
 const CHROME_EXTERNAL_KEY: &str = r"Software\Google\Chrome\Extensions";
+
+/// The CRX the installer puts beside the program: the browser extension itself, which the
+/// browsers install from this file (an "external extension"), instead of the person loading it
+/// by hand from chrome://extensions. Chrome and Edge keep a non-Web-Store extension off until it
+/// is enabled once -- their rule for everything outside their stores, not ours.
+#[cfg(windows)]
+const EXTENSION_CRX: &str = "mattdownloadmanager-extension.crx";
+
+/// The per-user registry keys the Chromium browsers read external extensions from (`<key>\<id>`).
+#[cfg(windows)]
+const CHROMIUM_EXTENSION_KEYS: [&str; 4] = [
+    r"Software\Google\Chrome\Extensions",
+    r"Software\Chromium\Extensions",
+    r"Software\Microsoft\Edge\Extensions",
+    r"Software\BraveSoftware\Brave-Browser\Extensions",
+];
 
 /// A message from the extension.
 #[derive(Debug, Default, Deserialize, PartialEq)]
@@ -109,7 +125,7 @@ struct Message {
     proxy: Option<String>,
     proxy_pac: Option<String>,
     proxy_login: bool,
-    /// The user asked for this download (right-click → Download with Mister Download Manager):
+    /// The user asked for this download (right-click → Download with Matt Download Manager):
     /// Options' automatic-capture rules don't apply, as IDM's "Download with IDM" takes any link.
     explicit: bool,
     /// May the download button show over videos on page `url`? With `referrer`: the tab's
@@ -146,7 +162,7 @@ struct Message {
     exclude_site: Option<String>,
     /// The popup's Undo (#404): take this host name off the excluded sites again.
     include_site: Option<String>,
-    /// The toolbar button: bring Mister Download Manager's window up.
+    /// The toolbar button: bring Matt Download Manager's window up.
     open: bool,
     /// The extension left a download to the browser by Options' rules (it has them from
     /// `rules`) without asking about it: for MDM's log. Under its own key, with no `url`: an
@@ -251,7 +267,7 @@ struct Reply {
     /// (docs/browser-help.md): `not-running`, `too-large`, `refused`, `options`.
     #[serde(skip_serializing_if = "Option::is_none")]
     why: Option<&'static str>,
-    /// Mister Download Manager's version (this host comes with it).
+    /// Matt Download Manager's version (this host comes with it).
     #[serde(skip_serializing_if = "Option::is_none")]
     version: Option<&'static str>,
     /// For `rules`: Options → File types.
@@ -276,7 +292,7 @@ struct Reply {
     #[serde(skip_serializing_if = "Option::is_none")]
     capture_off: Option<&'static str>,
     /// For `rules`: whether a .torrent is taken (Torrent settings → "Open magnet links and
-    /// .torrent files with Mister Download Manager", #1058); false, the extension leaves one to
+    /// .torrent files with Matt Download Manager", #1058); false, the extension leaves one to
     /// the browser (`torrents`). A host before it doesn't say: the extension takes them as listed.
     #[serde(skip_serializing_if = "Option::is_none")]
     torrents: Option<bool>,
@@ -1007,7 +1023,7 @@ enum Undelivered {
     Refused(String),
 }
 
-/// How long a Mister Download Manager just started gets to open its channel (a first start, a
+/// How long a Matt Download Manager just started gets to open its channel (a first start, a
 /// slow disk or an antivirus scan can take a while); the browser's download waits meanwhile.
 const START_WAIT: Duration = Duration::from_secs(20);
 
@@ -1023,7 +1039,7 @@ fn bundle_of(exe: &std::path::Path) -> Option<PathBuf> {
         .map(PathBuf::from)
 }
 
-/// Hand `cmd` to Mister Download Manager, starting it only if none is running.
+/// Hand `cmd` to Matt Download Manager, starting it only if none is running.
 fn deliver(cmd: &mdm_ipc::Command) -> Result<(), Undelivered> {
     // Whatever it asks may open a window: the app may bring it to the front (Windows only: Linux
     // and macOS have no foreground lock for a host to lift).
@@ -1042,9 +1058,9 @@ fn deliver(cmd: &mdm_ipc::Command) -> Result<(), Undelivered> {
     let app = match std::fs::read_to_string(dir.join("app-path")) {
         Ok(path) if !path.trim().is_empty() => PathBuf::from(path.trim()),
         _ => dir.join(if cfg!(windows) {
-            "misterdownloadmanager.exe"
+            "mattdownloadmanager.exe"
         } else {
-            "misterdownloadmanager"
+            "mattdownloadmanager"
         }),
     };
     let safari = SAFARI.load(std::sync::atomic::Ordering::Relaxed);
@@ -1084,7 +1100,7 @@ fn deliver(cmd: &mdm_ipc::Command) -> Result<(), Undelivered> {
         }
     }
     Err(Undelivered::NotRunning(
-        "Mister Download Manager did not start".into(),
+        "Matt Download Manager did not start".into(),
     ))
 }
 
@@ -1172,7 +1188,7 @@ fn this_program() -> Result<PathBuf, String> {
 fn chromium_manifest(program: &std::path::Path) -> serde_json::Value {
     serde_json::json!({
         "name": HOST_NAME,
-        "description": "Mister Download Manager",
+        "description": "Matt Download Manager",
         "path": program,
         "type": "stdio",
         "allowed_origins": chromium_ids().into_iter().map(origin).collect::<Vec<_>>(),
@@ -1183,7 +1199,7 @@ fn chromium_manifest(program: &std::path::Path) -> serde_json::Value {
 fn firefox_manifest(program: &std::path::Path) -> serde_json::Value {
     serde_json::json!({
         "name": HOST_NAME,
-        "description": "Mister Download Manager",
+        "description": "Matt Download Manager",
         "path": program,
         "type": "stdio",
         "allowed_extensions": [FIREFOX_ID],
@@ -1202,7 +1218,7 @@ fn portable_refused() -> Result<(), String> {
     if mdm_ipc::portable_dir().is_some() {
         return Err(
             "portable mode: browser integration is not registered (nothing is written outside \
-             its folder); install Mister Download Manager to use it"
+             its folder); install Matt Download Manager to use it"
                 .into(),
         );
     }
@@ -1218,7 +1234,7 @@ fn temporary_refused() -> Result<(), String> {
     if mdm_ipc::browsers::in_temporary_folder(&program) {
         return Err(format!(
             "{} is a temporary folder, deleted once it quits (an archive run without extracting \
-             it first): browser integration is not registered. Extract Mister Download Manager \
+             it first): browser integration is not registered. Extract Matt Download Manager \
              to a folder of its own and run it from there",
             program.parent().unwrap_or(&program).display()
         ));
@@ -1285,6 +1301,68 @@ fn register(all_users: bool) -> Result<(), String> {
     let root = if all_users { "HKLM" } else { "HKCU" };
     for (key, family) in WINDOWS_HOST_KEYS {
         reg_point(root, key, &own_manifest(family)?)?;
+    }
+    // The extension itself: the CRX beside this program, which the Chromium browsers install by
+    // themselves at their next start. No developer mode and no "Load unpacked" for the person;
+    // Chrome/Edge still ask them to switch it on once (their rule for non-store extensions).
+    let crx = exe_dir()?.join(EXTENSION_CRX);
+    if crx.is_file() {
+        let version = env!("CARGO_PKG_VERSION");
+        let crx = crx.display().to_string();
+        // Once our own listing is on the Chrome Web Store, Chrome installs that copy by itself
+        // (the entry below) and an external CRX entry would only add a second, disabled copy. The
+        // CRX entry stays for the browsers whose store can't serve it yet (Edge, Chromium, Brave).
+        let store_listed = store_id().is_some();
+        for key in CHROMIUM_EXTENSION_KEYS {
+            if store_listed && key == CHROME_EXTERNAL_KEY {
+                // Remove a CRX entry an earlier build wrote: Chrome keeps the store's copy only.
+                let _ = reg(&[
+                    "delete",
+                    &format!(r"{root}\{key}\{UNPACKED_ID}"),
+                    "/f",
+                    "/reg:32",
+                ]);
+                continue;
+            }
+            let _ = reg(&[
+                "add",
+                &format!(r"{root}\{key}\{UNPACKED_ID}"),
+                "/v",
+                "path",
+                "/t",
+                "REG_SZ",
+                "/d",
+                &crx,
+                "/f",
+                "/reg:32",
+            ]);
+            let _ = reg(&[
+                "add",
+                &format!(r"{root}\{key}\{UNPACKED_ID}"),
+                "/v",
+                "version",
+                "/t",
+                "REG_SZ",
+                "/d",
+                version,
+                "/f",
+                "/reg:32",
+            ]);
+        }
+        println!("registered the extension ({UNPACKED_ID}) as an external extension of the Chromium browsers: {crx}");
+    } else {
+        println!("no {EXTENSION_CRX} beside the program: the browser extension has to be loaded by hand");
+    }
+    // Store IDs an earlier 1.0.0 build registered while they were the upstream project's: Chrome
+    // then installed the upstream "Mister Download Manager" listing. Removed here, so a browser
+    // that ran that build stops pointing at the old product.
+    for id in mdm_ipc::extension::LEGACY_STORE_IDS {
+        let _ = reg(&[
+            "delete",
+            &format!(r"{root}\{CHROME_EXTERNAL_KEY}\{id}"),
+            "/f",
+            "/reg:32",
+        ]);
     }
     // Chrome offers the store's extension once it is listed (never a placeholder ID).
     if let Some(id) = store_id() {
@@ -1358,6 +1436,14 @@ fn unregister(all_users: bool) -> Result<(), String> {
         "/f",
         "/reg:32",
     ]);
+    for id in mdm_ipc::extension::LEGACY_STORE_IDS {
+        let _ = reg(&[
+            "delete",
+            &format!(r"{root}\{CHROME_EXTERNAL_KEY}\{id}"),
+            "/f",
+            "/reg:32",
+        ]);
+    }
     let _ = std::fs::remove_file(exe_dir()?.join(format!("{HOST_NAME}.json")));
     let _ = std::fs::remove_file(exe_dir()?.join(format!("{HOST_NAME}.firefox.json")));
     println!("unregistered {HOST_NAME}");
@@ -1543,7 +1629,7 @@ fn unregister(all_users: bool) -> Result<(), String> {
 
 /// Linux: where the .deb and .rpm install this program, which their manifests name.
 #[cfg(target_os = "linux")]
-const PACKAGED_HOST: &str = "/usr/bin/misterdownloadmanager-nmhost";
+const PACKAGED_HOST: &str = "/usr/bin/mattdownloadmanager-nmhost";
 
 /// Linux (the .deb and .rpm build, tools/installer/build-linux.sh): the manifests for everyone,
 /// in each folder the browsers read them from (`mdm_ipc::browsers::LINUX_SYSTEM_HOST_DIRS`),
@@ -1592,11 +1678,11 @@ fn main() {
         // manifests' allowed_origins / allowed_extensions say the same; this is a second check).
         _ if our_caller(&args) => serve().map_err(|e| e.to_string()),
         _ => Err(format!(
-            "refusing caller {args:?}: not the Mister Download Manager extension"
+            "refusing caller {args:?}: not the Matt Download Manager extension"
         )),
     };
     if let Err(e) = result {
-        eprintln!("misterdownloadmanager-nmhost: {e}");
+        eprintln!("mattdownloadmanager-nmhost: {e}");
         std::process::exit(1);
     }
 }
@@ -1618,11 +1704,11 @@ mod tests {
     #[test]
     fn safari_helper_finds_its_app() {
         let exe = std::path::Path::new(
-            "/Applications/Mister Download Manager.app/Contents/PlugIns/Mister Download Manager.appex/Contents/MacOS/misterdownloadmanager-nmhost",
+            "/Applications/Matt Download Manager.app/Contents/PlugIns/Matt Download Manager.appex/Contents/MacOS/mattdownloadmanager-nmhost",
         );
         assert_eq!(
             bundle_of(exe),
-            Some(PathBuf::from("/Applications/Mister Download Manager.app"))
+            Some(PathBuf::from("/Applications/Matt Download Manager.app"))
         );
         assert_eq!(bundle_of(std::path::Path::new("/usr/bin/nmhost")), None);
     }
@@ -1709,7 +1795,7 @@ mod tests {
         );
         assert!(r.ok && r.types.unwrap().contains("ZIP"));
         assert_eq!(file_name_of(&msg("https://x.org/f/b.rar?x=1", "")), "b.rar");
-        // Right-click → Download with Mister Download Manager: any link, whatever Options say.
+        // Right-click → Download with Matt Download Manager: any link, whatever Options say.
         let mut page = msg("https://example.com/page.html", "");
         assert!(verdict(&page, &rules).is_err());
         page.explicit = true;
@@ -2770,7 +2856,7 @@ mod tests {
         assert_eq!(c.user_agent.as_deref(), Some("UA"));
         assert_eq!(
             c.name, None,
-            "empty filename means: let Mister Download Manager decide"
+            "empty filename means: let Matt Download Manager decide"
         );
         assert!(!c.later && !c.silent);
         assert_eq!((c.proxy, c.proxy_pac, c.proxy_login), (None, None, false));

@@ -5,17 +5,17 @@
 MDM can be driven without its window in three ways:
 
 - **The app's own command line**, the same switches as IDM's: hand a download to the running app from a script, a batch file or another program.
-- **`misterdownloadmanager-cli`**, a separate command-line tool: download files, videos and torrents in a terminal, with progress, without the app.
+- **`mattdownloadmanager-cli`**, a separate command-line tool: download files, videos and torrents in a terminal, with progress, without the app.
 - **The automation API**: other programs list the running app's downloads (as JSON) and pause, start, remove or delete them, over a local, token-protected channel. AI assistants use it through MDM's MCP server: see [AI assistants](ai-assistants.md).
 
-To run the whole app without a window, on a home server or a NAS, see [Run MDM on a server](server.md) (`misterdownloadmanager --headless`); to control it from a phone, [Control MDM from your phone](remote-control.md).
+To run the whole app without a window, on a home server or a NAS, see [Run MDM on a server](server.md) (`mattdownloadmanager --headless`); to control it from a phone, [Control MDM from your phone](remote-control.md).
 
 The examples use Windows' paths; on macOS and Linux the programs have the same names without `.exe`.
 
 ## The app's command line
 
 ```
-misterdownloadmanager.exe /d URL [/p folder] [/f name] [/a] [/n] [/s]
+mattdownloadmanager.exe /d URL [/p folder] [/f name] [/a] [/n] [/s]
 ```
 
 | Switch | What it does |
@@ -27,18 +27,18 @@ misterdownloadmanager.exe /d URL [/p folder] [/f name] [/a] [/n] [/s]
 | `/n` | Silent: no **Download File Info** window, the download starts (or is queued, with `/a`) at once. |
 | `/s` | Start the main download queue. |
 | `/exit` | Save and close the running app (the installer uses it before an upgrade). |
-| `/startup` | Start in the notification area, the window hidden: what **Launch Mister Download Manager on startup** starts MDM with when you sign in. Where no notification area shows MDM's icon (some Linux desktops), MDM starts minimized. A running MDM stays as it is. |
+| `/startup` | Start in the notification area, the window hidden: what **Launch Matt Download Manager on startup** starts MDM with when you sign in. Where no notification area shows MDM's icon (some Linux desktops), MDM starts minimized. A running MDM stays as it is. |
 | *a `.torrent` file or `magnet:` link* | Open it in **Add torrent** (what Windows passes when MDM opens torrents). |
 
 Switches can start with `/` or `-`, in any case. If MDM is running, the command goes to it; if not, MDM starts and carries it out. For example:
 
 ```
-misterdownloadmanager.exe /d https://example.com/files/report.pdf /p D:\Reports /n
-misterdownloadmanager.exe /d https://example.com/big.iso /a
-misterdownloadmanager.exe /s
+mattdownloadmanager.exe /d https://example.com/files/report.pdf /p D:\Reports /n
+mattdownloadmanager.exe /d https://example.com/big.iso /a
+mattdownloadmanager.exe /s
 ```
 
-## misterdownloadmanager-cli
+## mattdownloadmanager-cli
 
 It comes with every download of MDM, next to the app (the installer puts it in MDM's folder). It works on its own: the app needn't run, except for `status` and `api`.
 
@@ -61,12 +61,12 @@ It comes with every download of MDM, next to the app (the installer puts it in M
 | `remove ID...`, `delete ID...` | Take downloads off the running app's list: `remove` keeps their files, `delete` deletes them too. A running download is paused first (`pause`). |
 | `api on`, `api off` | Turn the running app's automation API on or off. |
 
-`misterdownloadmanager-cli help <command>` shows every option. A command that fails (the app isn't running, it answers with an error, a download breaks) exits with code 1. For example:
+`mattdownloadmanager-cli help <command>` shows every option. A command that fails (the app isn't running, it answers with an error, a download breaks) exits with code 1. For example:
 
 ```
-misterdownloadmanager-cli get https://example.com/big.iso -o D:\Downloads -c 16 --checksum sha256:9f86d0…
-misterdownloadmanager-cli video-get "https://www.youtube.com/watch?v=aqz-KE-bpKQ" -f "b[height=720]"
-misterdownloadmanager-cli torrent-get "magnet:?xt=urn:btih:…" --files 0
+mattdownloadmanager-cli get https://example.com/big.iso -o D:\Downloads -c 16 --checksum sha256:9f86d0…
+mattdownloadmanager-cli video-get "https://www.youtube.com/watch?v=aqz-KE-bpKQ" -f "b[height=720]"
+mattdownloadmanager-cli torrent-get "magnet:?xt=urn:btih:…" --files 0
 ```
 
 ### JSON for scripts and programs
@@ -78,7 +78,7 @@ With `--json` (before or after the command), every command prints JSON instead o
 | `get`, `resume` | `{"event": "through", "service"}` first when the download goes through a debrid account, then a `{"event": "progress", "downloaded", "size", "speed", "connections", "segments"}` line every half second, then `{"event": "done", "path", "size", "seconds"}`, or `{"event": "paused", "state"}` after `Ctrl+C` (`state` is the file `resume` takes). |
 | `video-get` | `{"event": "progress", "downloaded", "size", "speed"}` lines, then `{"event": "done", "path", "subtitles", "subtitle_problems"}`: the subtitle files saved beside it, and the languages the site refused (`{"code", "name", "reason", "beside"}`; `beside`: they came on a second try, beside the video instead of in it). |
 | `torrent-get` | `{"event": "progress", "phase", "downloaded", "size", "speed", "peers", "peers_seen"}` lines, then `{"event": "done", "path", "size"}`, or `{"event": "stopped", "downloaded", "seconds"}` with `--seconds`. |
-| `video-info` | `{"title", "choices": [{"label", "format", "size", "approx", "height", "fps", "codec", "range"}], "subtitles": [{"code", "name", "automatic"}], "declared"}`; `declared` is the address of the video the page says it is about, when that one was looked up instead of the first player in its HTML (on a site yt-dlp has no reader of its own for), else `null`; a choice's `format` is what `video-get -f` takes (the very formats it was sized from, as `401+251`, then the nearest should those be gone), `approx` says its `size` is an estimate, `codec` is `AV1`, `VP9`, `H.264`…, `range` is `HDR` (or `SDR` beside an HDR choice); a subtitle's `code` is what `--subs` takes. |
+| `video-info` | `{"title", "choices": [{"label", "format", "size", "approx", "height", "fps", "codec", "range"}], "subtitles": [{"code", "name", "automatic"}], "declared"}`; `declared` is the address of the video the page says it is about, when that one was looked up instead of the first player in its HTML (on a site yt-dlp has no reader of its own for), else `null`; a choice's `format` is what `video-get -f` takes (the very formats it was sized from, as `401+140`, then the nearest should those be gone), `approx` says its `size` is an estimate, `codec` is `AV1`, `VP9`, `H.264`…, `range` is `HDR` (or `SDR` beside an HDR choice); a subtitle's `code` is what `--subs` takes. |
 | `torrent-info` | `{"name", "info_hash", "size", "files": [{"index", "size", "path"}]}`. |
 | `torrent-create` | `{"info_hash", "path"}`. |
 | `install-ytdlp`, `install-ffmpeg` | `{"tool", "version", "path"}`. |
@@ -87,7 +87,7 @@ With `--json` (before or after the command), every command prints JSON instead o
 Sizes are in bytes (`null` while unknown), speeds in bytes per second. A failure prints `{"error": "…"}` and exits with code 1. For example:
 
 ```
-misterdownloadmanager-cli --json get https://example.com/big.iso -o D:\Downloads
+mattdownloadmanager-cli --json get https://example.com/big.iso -o D:\Downloads
 {"event":"progress","downloaded":4194304,"size":1073741824,"speed":52428800,"connections":8,"segments":8}
 …
 {"event":"done","path":"D:\\Downloads\\big.iso","size":1073741824,"seconds":20.4}
@@ -95,14 +95,14 @@ misterdownloadmanager-cli --json get https://example.com/big.iso -o D:\Downloads
 
 ## The automation API
 
-Other programs can ask the running app what it is downloading, and pause, start, remove or delete downloads. The API is **off by default**; turn it on with `misterdownloadmanager-cli api on` (and off with `api off`).
+Other programs can ask the running app what it is downloading, and pause, start, remove or delete downloads. The API is **off by default**; turn it on with `mattdownloadmanager-cli api on` (and off with `api off`).
 
 ### How a program talks to MDM
 
 1. While it runs, MDM listens on a port of `127.0.0.1` (this computer only) and writes the port and a secret token to `ipc.json` in its data folder:
-   - Windows: `%APPDATA%\misterdownloadmanager\ipc.json`
-   - macOS: `~/Library/Application Support/misterdownloadmanager/ipc.json`
-   - Linux: `~/.local/share/misterdownloadmanager/ipc.json`
+   - Windows: `%APPDATA%\mattdownloadmanager\ipc.json`
+   - macOS: `~/Library/Application Support/mattdownloadmanager/ipc.json`
+   - Linux: `~/.local/share/mattdownloadmanager/ipc.json`
    - A [portable copy](portable.md): `data\ipc.json` next to the program.
 
    The token changes at every start; only programs that can read your data folder (yours) can use it.
@@ -122,14 +122,14 @@ Other programs can ask the running app what it is downloading, and pause, start,
 
 An unknown question or action is answered `{"error": "…"}`, as is a question while the API is off (then with `"code": "api-off"`, for programs to check: the error text may change). A wrong token is answered `denied`.
 
-Every request and answer is described, field by field, in a JSON Schema: [automation-api.schema.json](automation-api.schema.json) (also at `https://misterdownloadmanager.com/automation-api.schema.json`). It is made from the code the app answers with, so it stays exact; programs can check what they send and read against it, or generate their types from it.
+Every request and answer is described, field by field, in a JSON Schema: [automation-api.schema.json](automation-api.schema.json) (also at `https://mattdownloadmanager.com/automation-api.schema.json`). It is made from the code the app answers with, so it stays exact; programs can check what they send and read against it, or generate their types from it.
 
 ### Examples
 
 PowerShell (Windows):
 
 ```powershell
-$ep = Get-Content "$env:APPDATA\misterdownloadmanager\ipc.json" | ConvertFrom-Json
+$ep = Get-Content "$env:APPDATA\mattdownloadmanager\ipc.json" | ConvertFrom-Json
 $client = New-Object Net.Sockets.TcpClient("127.0.0.1", $ep.port)
 $stream = $client.GetStream()
 $writer = New-Object IO.StreamWriter($stream); $reader = New-Object IO.StreamReader($stream)
@@ -144,7 +144,7 @@ Python:
 ```python
 import json, os, socket
 
-ipc = os.path.join(os.environ["APPDATA"], "misterdownloadmanager", "ipc.json")  # see above elsewhere
+ipc = os.path.join(os.environ["APPDATA"], "mattdownloadmanager", "ipc.json")  # see above elsewhere
 ep = json.load(open(ipc))
 with socket.create_connection(("127.0.0.1", ep["port"])) as s:
     s.sendall((json.dumps({"token": ep["token"], "query": "list"}) + "\n").encode())

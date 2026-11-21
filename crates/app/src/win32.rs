@@ -1,4 +1,4 @@
-//! The only Windows FFI in Mister Download Manager (D-008): IDM's dialog frame for our dialog windows, and the
+//! The only Windows FFI in Matt Download Manager (D-008): IDM's dialog frame for our dialog windows, and the
 //! shell's own small file-type icons (the ones Explorer and IDM show — Windows' artwork, not IDM's),
 //! and the drop target's OLE `IDropTarget` (`ole`).
 #![allow(unsafe_code)]
@@ -3985,7 +3985,7 @@ fn reg_string(key: &str, name: &str) -> Option<String> {
 /// names have `_` for `-`.
 pub fn take_install_language() -> Option<String> {
     use windows_sys::Win32::System::Registry::{HKEY_CURRENT_USER, RegDeleteKeyValueW};
-    const KEY: &str = r"Software\MisterDownloadManager";
+    const KEY: &str = r"Software\MattDownloadManager";
     const NAME: &str = "InstallLanguage";
     let value = reg_string(KEY, NAME)?;
     let w = |s: &str| -> Vec<u16> { s.encode_utf16().chain(Some(0)).collect() };
@@ -3997,12 +3997,12 @@ pub fn take_install_language() -> Option<String> {
     Some(install_language_code(&value))
 }
 
-/// What the installer's task "Open .torrent files and magnet links with Mister Download
+/// What the installer's task "Open .torrent files and magnet links with Matt Download
 /// Manager" was (tools/installer/mdm.iss writes `1` or `0` on every install): None when no
 /// installer wrote it. Only read: the app settles Torrent settings' switch from it once
 /// (`Settings::settle_torrent_handler`, #1058), and an upgrade's value is never asked again.
 pub fn install_torrents() -> Option<bool> {
-    reg_string(r"Software\MisterDownloadManager", "InstallTorrents").map(|v| v.trim() == "1")
+    reg_string(r"Software\MattDownloadManager", "InstallTorrents").map(|v| v.trim() == "1")
 }
 
 /// Is this program what Windows opens .torrent files with by their class (the user's or
@@ -4021,7 +4021,7 @@ pub fn torrent_handler_is_ours() -> bool {
         .is_some_and(|c| runs_program(&c, &exe.display().to_string()))
 }
 
-/// Does an open command (`"C:\…\misterdownloadmanager.exe" "%1"`) start `exe`? Windows' paths
+/// Does an open command (`"C:\…\mattdownloadmanager.exe" "%1"`) start `exe`? Windows' paths
 /// are case-insensitive.
 fn runs_program(command: &str, exe: &str) -> bool {
     !exe.is_empty() && command.to_lowercase().contains(&exe.to_lowercase())
@@ -4031,8 +4031,8 @@ fn runs_program(command: &str, exe: &str) -> bool {
 mod torrent_handler_tests {
     #[test]
     fn an_open_command_names_its_program() {
-        let exe = r"C:\Program Files\Mister Download Manager\misterdownloadmanager.exe";
-        let ours = r#""c:\program files\mister download manager\MisterDownloadManager.exe" "%1""#;
+        let exe = r"C:\Program Files\Matt Download Manager\mattdownloadmanager.exe";
+        let ours = r#""c:\program files\matt download manager\MattDownloadManager.exe" "%1""#;
         assert!(super::runs_program(ours, exe));
         let other = r#""C:\Program Files\qBittorrent\qbittorrent.exe" "%1""#;
         assert!(!super::runs_program(other, exe));
@@ -4341,13 +4341,13 @@ pub fn play_sound(file: &str) {
 /// the same as its Capabilities' ApplicationName (Microsoft: "ApplicationName must always match
 /// the name that is registered under RegisteredApplications"). tools/installer/mdm.iss writes
 /// the same.
-pub const REGISTERED_NAME: &str = "Mister Download Manager";
+pub const REGISTERED_NAME: &str = "Matt Download Manager";
 /// MDM's Capabilities (Default apps' list of what it can open), under HKCU or HKLM.
-const CAPABILITIES: &str = r"Software\MisterDownloadManager\Capabilities";
+const CAPABILITIES: &str = r"Software\MattDownloadManager\Capabilities";
 /// The ProgIDs MDM's Capabilities name: Default apps wants an application-specific one for each
 /// file type and protocol, never the generic `magnet` class.
-const TORRENT_PROGID: &str = "MisterDownloadManager.Torrent";
-const MAGNET_PROGID: &str = "MisterDownloadManager.Magnet";
+const TORRENT_PROGID: &str = "MattDownloadManager.Torrent";
+const MAGNET_PROGID: &str = "MattDownloadManager.Magnet";
 
 /// Make MDM (on) or stop it being (off) what Windows opens magnet links and .torrent files
 /// with, for the current user (HKCU; no admin). Off removes only what points at us.
@@ -4430,7 +4430,7 @@ pub fn set_torrent_handlers(on: bool) {
             set(
                 CAPABILITIES,
                 Some("ApplicationDescription"),
-                // i18n: Windows' Settings → Default apps: what Mister Download Manager is
+                // i18n: Windows' Settings → Default apps: what Matt Download Manager is
                 crate::i18n::t("Downloads files, videos and torrents"),
             );
             set(CAPABILITIES, Some("ApplicationIcon"), &icon);
@@ -4613,7 +4613,7 @@ fn others(handlers: &[Handler], exe: &str) -> Vec<String> {
 mod default_apps_tests {
     use super::{Handler, default_apps_uri, others};
 
-    const MDM: &str = r"C:\Program Files\Mister Download Manager\misterdownloadmanager.exe";
+    const MDM: &str = r"C:\Program Files\Matt Download Manager\mattdownloadmanager.exe";
     const FDM: &str = r"C:\Program Files\Softdeluxe\Free Download Manager\fdm.exe";
 
     fn h(program: Option<&str>, name: Option<&str>) -> Handler {
@@ -4628,11 +4628,11 @@ mod default_apps_tests {
     fn the_settings_page_names_the_registration() {
         assert_eq!(
             default_apps_uri(false),
-            "ms-settings:defaultapps?registeredAppUser=Mister%20Download%20Manager"
+            "ms-settings:defaultapps?registeredAppUser=Matt%20Download%20Manager"
         );
         assert_eq!(
             default_apps_uri(true),
-            "ms-settings:defaultapps?registeredAppMachine=Mister%20Download%20Manager"
+            "ms-settings:defaultapps?registeredAppMachine=Matt%20Download%20Manager"
         );
     }
 
@@ -4641,7 +4641,7 @@ mod default_apps_tests {
     #[test]
     fn another_default_is_named_once() {
         let fdm = || h(Some(FDM), Some("Free Download Manager"));
-        let ours = || h(Some(&MDM.to_uppercase()), Some("Mister Download Manager"));
+        let ours = || h(Some(&MDM.to_uppercase()), Some("Matt Download Manager"));
         assert_eq!(others(&[fdm(), fdm()], MDM), ["Free Download Manager"]);
         assert_eq!(others(&[fdm(), ours()], MDM), ["Free Download Manager"]);
         assert!(others(&[ours(), ours()], MDM).is_empty());
@@ -4655,7 +4655,7 @@ mod default_apps_tests {
     }
 
     /// #1091, run by hand only, as it redirects this process's HKEY_CURRENT_USER, which other
-    /// tests read: `cargo test -p mdm-app --bin misterdownloadmanager scratch_hive -- --ignored
+    /// tests read: `cargo test -p mdm-app --bin mattdownloadmanager scratch_hive -- --ignored
     /// --test-threads=1`. `set_torrent_handlers` writes into a scratch key standing for HKCU
     /// (RegOverridePredefKey), never the account's own associations: on, the classes and MDM's
     /// Default apps registration as Microsoft documents it; off, all of it gone.
@@ -4670,7 +4670,7 @@ mod default_apps_tests {
             HKEY, HKEY_CURRENT_USER, KEY_ALL_ACCESS, REG_OPTION_NON_VOLATILE, RegCloseKey,
             RegCreateKeyExW, RegDeleteKeyW, RegDeleteTreeW, RegOverridePredefKey,
         };
-        let scratch: Vec<u16> = r"Software\MisterDownloadManagerTest1091"
+        let scratch: Vec<u16> = r"Software\MattDownloadManagerTest1091"
             .encode_utf16()
             .chain(Some(0))
             .collect();
@@ -4700,21 +4700,21 @@ mod default_apps_tests {
                 (r"Software\Classes\magnet\shell\open\command", ""),
                 (r"Software\Classes\.torrent", ""),
                 (
-                    r"Software\Classes\MisterDownloadManager.Magnet",
+                    r"Software\Classes\MattDownloadManager.Magnet",
                     "URL Protocol",
                 ),
                 (
-                    r"Software\Classes\MisterDownloadManager.Magnet\shell\open\command",
+                    r"Software\Classes\MattDownloadManager.Magnet\shell\open\command",
                     "",
                 ),
                 (CAPABILITIES, "ApplicationName"),
                 (CAPABILITIES, "ApplicationDescription"),
                 (
-                    r"Software\MisterDownloadManager\Capabilities\UrlAssociations",
+                    r"Software\MattDownloadManager\Capabilities\UrlAssociations",
                     "magnet",
                 ),
                 (
-                    r"Software\MisterDownloadManager\Capabilities\FileAssociations",
+                    r"Software\MattDownloadManager\Capabilities\FileAssociations",
                     ".torrent",
                 ),
                 (r"Software\RegisteredApplications", REGISTERED_NAME),
@@ -4756,9 +4756,9 @@ fn run_value() -> Option<String> {
     if crate::offscreen() {
         return std::env::var("MDM_TEST_RUN_VALUE")
             .ok()
-            .filter(|v| v.starts_with("MisterDownloadManagerTest"));
+            .filter(|v| v.starts_with("MattDownloadManagerTest"));
     }
-    Some("MisterDownloadManager".to_owned())
+    Some("MattDownloadManager".to_owned())
 }
 
 const RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
@@ -4797,7 +4797,7 @@ fn startup_outdated(value: &str, exe: &std::path::Path) -> bool {
         .any(|a| a.eq_ignore_ascii_case(mdm_ipc::STARTUP))
 }
 
-/// Is Mister Download Manager in the user's Run key (set by Options or by the installer's
+/// Is Matt Download Manager in the user's Run key (set by Options or by the installer's
 /// "Start when Windows starts")? The registry is the truth for Options → "Launch on startup".
 pub fn run_at_startup() -> bool {
     run_value().is_some_and(|name| {
@@ -4868,7 +4868,7 @@ mod startup_tests {
     use super::{startup_command, startup_outdated};
     use std::path::Path;
 
-    const EXE: &str = r"C:\Program Files\Mister Download Manager\misterdownloadmanager.exe";
+    const EXE: &str = r"C:\Program Files\Matt Download Manager\mattdownloadmanager.exe";
 
     /// The entry Options and the installer write (#226): the program, quoted, then `/startup`.
     #[test]
@@ -4893,7 +4893,7 @@ mod startup_tests {
         assert!(startup_outdated(&format!("\"{EXE}\""), exe));
         // Written by hand: unquoted, in another case, with other slashes.
         assert!(startup_outdated(
-            r"c:\program files\mister download manager\MISTERDOWNLOADMANAGER.EXE",
+            r"c:\program files\matt download manager\MATTDOWNLOADMANAGER.EXE",
             exe
         ));
         assert!(startup_outdated(
@@ -4906,7 +4906,7 @@ mod startup_tests {
         assert!(!startup_outdated(&format!("\"{EXE}\" /STARTUP"), exe));
         // Another copy's (a portable one, a build elsewhere).
         assert!(!startup_outdated(
-            r#""D:\mdm\misterdownloadmanager.exe""#,
+            r#""D:\mdm\mattdownloadmanager.exe""#,
             exe
         ));
         assert!(!startup_outdated("", exe));
@@ -4917,7 +4917,7 @@ mod startup_tests {
     fn the_installer_writes_the_same_entry() {
         let iss = include_str!("../../../tools/installer/mdm.iss");
         assert!(iss.contains(
-            r#"ValueName: "MisterDownloadManager"; ValueData: """{app}\{#AppExe}"" /startup""#
+            r#"ValueName: "MattDownloadManager"; ValueData: """{app}\{#AppExe}"" /startup""#
         ));
     }
 }
@@ -5672,7 +5672,7 @@ pub mod ole {
 /// with the process.
 pub fn mark_running() {
     use windows_sys::Win32::System::Threading::CreateMutexW;
-    let name: Vec<u16> = "MisterDownloadManager.Running\0".encode_utf16().collect();
+    let name: Vec<u16> = "MattDownloadManager.Running\0".encode_utf16().collect();
     // SAFETY: NUL-terminated name; the handle is deliberately kept for the process's life.
     unsafe {
         CreateMutexW(std::ptr::null(), 0, name.as_ptr());
@@ -5818,7 +5818,7 @@ pub fn process_alive(pid: u32) -> bool {
     }
 }
 
-/// The command line in this windowed program (main.rs, `misterdownloadmanager-cli`'s
+/// The command line in this windowed program (main.rs, `mattdownloadmanager-cli`'s
 /// launcher started it): the console it was started from, for what it prints and reads and for
 /// Ctrl+C. Input and output the launcher handed over stay as they are (a file, a pipe, the console
 /// itself); only those it didn't have get the console's. With the launcher's process id, this
@@ -6441,7 +6441,7 @@ pub fn repair_browsers() {
                 .map_err(|e| e.to_string())
                 .and_then(|exe| {
                     crate::extension::run_host(
-                        &exe.with_file_name("misterdownloadmanager-nmhost.exe"),
+                        &exe.with_file_name("mattdownloadmanager-nmhost.exe"),
                         "--repair",
                         crate::extension::SET_UP_LIMIT,
                     )
@@ -6453,6 +6453,44 @@ pub fn repair_browsers() {
     }
 }
 
+/// At the first start of a copy the setup never ran for (its browser box unticked, or a plain
+/// zip extracted by hand): register the native host for this user, under HKCU only, so that
+/// browser capture works without an administrator. The setup does this when it runs, and a
+/// registration that already works is left alone (`repair_browsers`: a copy elsewhere's).
+pub fn register_browsers_at_start() {
+    let started = std::thread::Builder::new()
+        .name("register-browsers".into())
+        .spawn(|| {
+            let result = std::env::current_exe()
+                .map_err(|e| e.to_string())
+                .and_then(|exe| {
+                    crate::extension::run_host(
+                        &exe.with_file_name("mattdownloadmanager-nmhost.exe"),
+                        "--register",
+                        crate::extension::SET_UP_LIMIT,
+                    )
+                });
+            match &result {
+                Ok(said) => {
+                    tracing::info!("browser integration: registered for this user ({said})");
+                }
+                Err(e) => tracing::warn!("browser integration: could not register: {e}"),
+            }
+            crate::extension::registered_as(&result);
+        });
+    if let Err(e) = started {
+        tracing::warn!("browser integration: not registered, no thread for it: {e}");
+    }
+}
+
+/// Does this program run with administrator rights (started elevated, or by "Run as
+/// administrator")? Only then can Windows Firewall's alert for a program be answered, so the
+/// parts that listen for other computers stay off by default on a standard user's account
+/// (`settings.rs`: the torrent engine's incoming connections and UPnP).
+pub fn elevated() -> bool {
+    static ELEVATED: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ELEVATED.get_or_init(|| unsafe { windows_sys::Win32::UI::Shell::IsUserAnAdmin() != 0 })
+}
 /// `cmd` runs without a console window of its own (the native host is a console program).
 pub fn no_console(cmd: &mut std::process::Command) {
     use std::os::windows::process::CommandExt;

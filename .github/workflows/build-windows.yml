@@ -1,0 +1,94 @@
+name: build-windows
+
+# Builds the Windows release from this repository: the four programs (Rust, GNU toolchain, so no
+# Visual Studio is needed), the browser extensions, and the Inno Setup installer. The artifacts are
+# the inputs of the signing step (SignPath, once the project is accepted; set the SIGNPATH_* secrets
+# and uncomment the last step).
+#
+# The same commands are in WORKPC-SETUP.md; this workflow is what makes the release a *verifiable*
+# build of the source (a SignPath requirement: the binary must be the output of an automated build
+# of the repository).
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTUP_TOOLCHAIN: stable-x86_64-pc-windows-gnu
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install the Rust toolchain (GNU host, x86_64)
+        run: |
+          rustup toolchain install stable-x86_64-pc-windows-gnu --profile minimal
+          rustup default stable-x86_64-pc-windows-gnu
+          rustc --version
+          cargo --version
+
+      - name: MinGW-w64 (the linker the GNU toolchain needs)
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+
+      - name: Python (the extension packer signs the CRX)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the CRX signing dependency
+        run: python -m pip install --upgrade cryptography
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build
+        run: cargo build --release --no-default-features -p mdm-app -p mdm-nmhost -p mdm-cli -p mdm-mcp
+
+      - name: Browser extensions (Chromium, Firefox, Safari + the signed CRX)
+        env:
+          MDM_EXTENSION_KEY: ${{ secrets.EXTENSION_SIGNING_KEY }}
+        run: powershell -ExecutionPolicy Bypass -File tools/extension/pack.ps1
+
+      - name: Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Installer and zips
+        run: powershell -ExecutionPolicy Bypass -File tools/installer/build.ps1
+
+      - name: Upload the unsigned artifacts (input of the signing step)
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: target/dist/*
+
+      # ---- Signing (after the project is accepted by SignPath Foundation) ------------------
+      # 1. Create a SignPath project linked to this repository, a signing policy `release-signing`
+      #    with a manual approval, and an artifact configuration matching the files above.
+      # 2. Add the secrets SIGNPATH_API_TOKEN and EXTENSION_SIGNING_KEY.
+      # 3. Uncomment this step and make the release job depend on it.
+      #
+      # - name: Sign with SignPath
+      #   uses: signpath/github-action-submit-signing-request@v1
+      #   with:
+      #     api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+      #     organization-id: ${{ vars.SIGNPATH_ORG_ID }}
+      #     project-slug: matt-download-manager
+      #     signing-policy-slug: release-signing
+      #     github-artifact-id: ${{ steps.upload.outputs.artifact-id }}
+      #     wait-for-completion: true
+      #     output-artifact-directory: signed

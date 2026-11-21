@@ -1,4 +1,4 @@
-//! `misterdownloadmanager --headless` (#157): MDM on a server (a NAS, Docker, Unraid), without a
+//! `mattdownloadmanager --headless` (#157): MDM on a server (a NAS, Docker, Unraid), without a
 //! window. The same app runs (its list, queues, Scheduler, limits, torrents, the automation API
 //! and the remote control), driven by a loop instead of the window's frames; downloads come from
 //! the remote control's page, the browser extension pointed at it, or the command line.
@@ -16,7 +16,7 @@
 //! | | `MDM_REMOTE_URL` | the page's address as people open it (a container's isn't) |
 //!
 //! The remote control is on (that is the point); `MDM_REMOTE=off` turns it off. With no device
-//! paired yet, a pairing code is printed at start; `misterdownloadmanager-cli pair` prints
+//! paired yet, a pairing code is printed at start; `mattdownloadmanager-cli pair` prints
 //! another.
 
 use std::path::PathBuf;
@@ -66,7 +66,7 @@ pub fn main(args: Vec<String>) -> ExitCode {
     }
     let Some(_instance) = mdm_ipc::instance_lock() else {
         eprintln!(
-            "Another Mister Download Manager uses the data folder {}.",
+            "Another Matt Download Manager uses the data folder {}.",
             data.display()
         );
         return ExitCode::FAILURE;
@@ -76,7 +76,7 @@ pub fn main(args: Vec<String>) -> ExitCode {
     // the one links added by hand go with (#668).
     crate::defaultbrowser::start();
     tracing::info!(
-        "Mister Download Manager {} ({}) starting without a window",
+        "Matt Download Manager {} ({}) starting without a window",
         crate::help::VERSION,
         crate::help::COMMIT
     );
@@ -223,7 +223,7 @@ fn tell(app: &mut crate::app::App) -> bool {
                     serde_json::from_str(&app.pair_answer());
                 if let Ok(a) = answer {
                     println!(
-                        "No device is paired yet. Open the address (or scan this) and enter the code {} {} (it works for {} minutes; `misterdownloadmanager-cli pair` shows a new one):\n{}",
+                        "No device is paired yet. Open the address (or scan this) and enter the code {} {} (it works for {} minutes; `mattdownloadmanager-cli pair` shows a new one):\n{}",
                         &a.code[..4],
                         &a.code[4..],
                         a.minutes,

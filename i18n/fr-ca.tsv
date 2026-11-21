@@ -1,4 +1,4 @@
-# Mister Download Manager in French (Canada) (Français (Canada)): tools/i18n/translate.py
+# Matt Download Manager in French (Canada) (Français (Canada)): tools/i18n/translate.py
 # writes the rows marked '#, machine'; a native speaker deletes that line after checking.
 # context	source	translation (craft-i18n format, rows as in en.tsv)
 @id	language.name	Français (Canada)
@@ -11,7 +11,7 @@
 #. never shown for a single download
 #. {n} = a number (keep the braces as they are)
 #, machine
-@plural	Are you sure you want to delete {n} download from Mister Download Manager list of downloads?|Are you sure you want to delete these {n} downloads from Mister Download Manager list of downloads?	Voulez-vous vraiment supprimer {n} téléchargement de la liste des téléchargements de Mister Download Manager?|Voulez-vous vraiment supprimer ces {n} téléchargements de la liste des téléchargements de Mister Download Manager?
+@plural	Are you sure you want to delete {n} download from Matt Download Manager list of downloads?|Are you sure you want to delete these {n} downloads from Matt Download Manager list of downloads?	Voulez-vous vraiment supprimer {n} téléchargement de la liste des téléchargements de Matt Download Manager?|Voulez-vous vraiment supprimer ces {n} téléchargements de la liste des téléchargements de Matt Download Manager?
 #. count in the Add torrent window
 #. while a magnet link's file list is fetched; {n} = peers that answered
 #. {n} = a number (keep the braces as they are)
@@ -270,7 +270,7 @@
 	a volume of it is missing	il manque un de ses volumes
 #. window title in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
-	About Mister Download Manager	À propos de Mister Download Manager
+	About Matt Download Manager	À propos de Matt Download Manager
 #. text in whereis.rs
 #. a download's server's round trip: {ms} a number of milliseconds, {reach} near, medium or far
 #, machine
@@ -333,7 +333,7 @@
 #. window title in extension.rs
 #. title of the window that offers the browser extension
 #, machine
-	Add Mister Download Manager to your browser	Ajouter Mister Download Manager à votre navigateur
+	Add Matt Download Manager to your browser	Ajouter Matt Download Manager à votre navigateur
 #. message or event log entry in the main window; text in the tray icon's menu
 #. link in the empty download list: opens Add URL
 #, machine
@@ -500,7 +500,7 @@
 	Always into a folder named after it	Toujours dans un dossier portant son nom
 #. checkbox in a dialog box
 #, machine
-	Always turn on Speed Limiter on Mister Download Manager startup	Toujours activer le limiteur de vitesse au démarrage de Mister Download Manager
+	Always turn on Speed Limiter on Matt Download Manager startup	Toujours activer le limiteur de vitesse au démarrage de Matt Download Manager
 #. text in regional.rs; text in the Scheduler window
 #. before noon, after a time of day (12-hour clock). Its pair is "PM": write both the same way (this language's own short marks, or both kept as AM and PM)
 #, machine
@@ -566,7 +566,7 @@
 #. text in a dialog box
 #. {name} = a file name (keep the braces as they are)
 #, machine
-	Are you sure you want to delete "{name}" from Mister Download Manager list of downloads?	Voulez-vous vraiment supprimer « {name} » de la liste des téléchargements de Mister Download Manager?
+	Are you sure you want to delete "{name}" from Matt Download Manager list of downloads?	Voulez-vous vraiment supprimer « {name} » de la liste des téléchargements de Matt Download Manager?
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -739,7 +739,7 @@
 	Browse...	Parcourir...
 #. text in extension.rs
 #, machine
-	Browser integration isn't set up on this computer, so no browser can reach Mister Download Manager yet.	L’intégration au navigateur n’est pas configurée sur cet ordinateur, donc aucun navigateur ne peut encore atteindre Mister Download Manager.
+	Browser integration isn't set up on this computer, so no browser can reach Matt Download Manager yet.	L’intégration au navigateur n’est pas configurée sur cet ordinateur, donc aucun navigateur ne peut encore atteindre Matt Download Manager.
 #. page title in the Options window
 #, machine
 	Browser/System Integration	Intégration navigateur/système
@@ -944,7 +944,7 @@
 	Choose a language	Choisir une langue
 #. text in langpick.rs
 #, machine
-	Choose the language Mister Download Manager shows its windows in:	Choisissez la langue dans laquelle Mister Download Manager affiche ses fenêtres :
+	Choose the language Matt Download Manager shows its windows in:	Choisissez la langue dans laquelle Matt Download Manager affiche ses fenêtres :
 #. text in the Options window
 #. Options → Sites Logins → Cookies for video sites: the title of the window, and the tooltip of the button, that pick a browser profile's folder
 #, machine
@@ -1621,7 +1621,7 @@
 	Exit	Quitter
 #. checkbox in a download's progress window; checkbox in the Scheduler window
 #, machine
-	Exit Mister Download Manager when done	Quitter Mister Download Manager une fois terminé
+	Exit Matt Download Manager when done	Quitter Matt Download Manager une fois terminé
 #. text in the Checksum window
 #, machine
 	Expected checksum (MD5, SHA-1, SHA-256, SHA-512 or CRC32):	Somme de contrôle attendue (MD5, SHA-1, SHA-256, SHA-512 ou CRC32) :
@@ -2086,7 +2086,7 @@
 	Hide web pages	Masquer les pages web
 #. text in the Options window
 #, machine
-	Hold Alt while clicking a link to let the browser download it instead of Mister Download Manager.	Maintenez la touche Alt enfoncée en cliquant sur un lien pour laisser le navigateur le télécharger au lieu de Mister Download Manager.
+	Hold Alt while clicking a link to let the browser download it instead of Matt Download Manager.	Maintenez la touche Alt enfoncée en cliquant sur un lien pour laisser le navigateur le télécharger au lieu de Matt Download Manager.
 #. link (opens a web page) in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Home page	Page d’accueil
@@ -2127,7 +2127,7 @@
 	Hungary	Hongrie
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
-	I download with Mister Download Manager: fast, free, and it looks like the download manager you already know. {link}	Je télécharge avec Mister Download Manager : rapide, gratuit, et il ressemble au gestionnaire de téléchargement que vous connaissez déjà. {link}
+	I download with Matt Download Manager: fast, free, and it looks like the download manager you already know. {link}	Je télécharge avec Matt Download Manager : rapide, gratuit, et il ressemble au gestionnaire de téléchargement que vous connaissez déjà. {link}
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2421,7 +2421,7 @@
 	Latvia	Lettonie
 #. text in the Options window
 #, machine
-	Launch Mister Download Manager on startup	Lancer Mister Download Manager au démarrage
+	Launch Matt Download Manager on startup	Lancer Matt Download Manager au démarrage
 #. text in countries.rs
 #. a country's name (where a download's server is)
 #, machine
@@ -2736,58 +2736,58 @@
 	Missing	Manquant
 #. message or event log entry in the main window; window title in a dialog box; text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
-	Mister Download Manager	Mister Download Manager
+	Matt Download Manager	Matt Download Manager
 #. text in unix.rs
 #. Linux, at start, on the terminal and in a message box: a library the window needs isn't installed; {libraries} = its file names (libxkbcommon-x11.so.0…), left as they are
 #, machine
-	Mister Download Manager can't open its window: this system lacks {libraries}.	Mister Download Manager ne peut pas ouvrir sa fenêtre : il manque {libraries} à ce système.
+	Matt Download Manager can't open its window: this system lacks {libraries}.	Matt Download Manager ne peut pas ouvrir sa fenêtre : il manque {libraries} à ce système.
 #. text in crashui.rs
 #. crash report window heading: MDM crashed and is gone
 #, machine
-	Mister Download Manager closed unexpectedly	Mister Download Manager s'est fermé inopinément
+	Matt Download Manager closed unexpectedly	Matt Download Manager s'est fermé inopinément
 #. window title in the Options window
 #, machine
-	Mister Download Manager Configuration	Configuration de Mister Download Manager
+	Matt Download Manager Configuration	Configuration de Matt Download Manager
 #. text in crashui.rs
 #, machine
-	Mister Download Manager crash report	Rapport d'incident de Mister Download Manager
+	Matt Download Manager crash report	Rapport d'incident de Matt Download Manager
 #. text in crashui.rs
 #. crash report window heading: an internal error, MDM still running
 #, machine
-	Mister Download Manager hit an internal error	Mister Download Manager a rencontré une erreur interne
+	Matt Download Manager hit an internal error	Matt Download Manager a rencontré une erreur interne
 #. text in wake.rs
 #. why the computer isn't going to sleep, in the system's list of programs that keep it awake (Windows' power requests, Linux's inhibitors)
 #, machine
-	Mister Download Manager is downloading	Mister Download Manager télécharge
+	Matt Download Manager is downloading	Matt Download Manager télécharge
 #. text in wake.rs
 #. why the computer isn't going to sleep, in the system's list of programs that keep it awake; {queue} = the queue's name
 #. {queue} = a queue name such as "Main queue" (keep the braces as they are)
 #, machine
-	Mister Download Manager is running the queue "{queue}"	Mister Download Manager exécute la file d’attente « {queue} »
+	Matt Download Manager is running the queue "{queue}"	Matt Download Manager exécute la file d’attente « {queue} »
 #. text in crashui.rs
 #. crash report window heading: MDM's window doesn't answer (frozen)
 #, machine
-	Mister Download Manager stopped responding	Mister Download Manager ne répond plus
+	Matt Download Manager stopped responding	Matt Download Manager ne répond plus
 #. text in crashui.rs
 #, machine
-	Mister Download Manager stopped responding for a while	Mister Download Manager a cessé de répondre pendant un certain temps
+	Matt Download Manager stopped responding for a while	Matt Download Manager a cessé de répondre pendant un certain temps
 #. text in the Options window
 #. \\n starts a new line: break lines where they fit the translation
 #, machine
-	Mister Download Manager writes every connection straight into the final\nfile (a sparse part file next to it), so no temporary directory and no\nassembling step are needed.	Mister Download Manager écrit chaque connexion directement dans le fichier\nfinal (un fichier de partie éparse à côté), de sorte qu'aucun répertoire\ntemporaire et aucune étape d'assemblage ne sont nécessaires.
+	Matt Download Manager writes every connection straight into the final\nfile (a sparse part file next to it), so no temporary directory and no\nassembling step are needed.	Matt Download Manager écrit chaque connexion directement dans le fichier\nfinal (un fichier de partie éparse à côté), de sorte qu'aucun répertoire\ntemporaire et aucune étape d'assemblage ne sont nécessaires.
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. {version} = a version number (keep the braces as they are)
 #, machine
-	Mister Download Manager {version} is available (released {date}).	Mister Download Manager {version} est disponible (publiée le {date}).
+	Matt Download Manager {version} is available (released {date}).	Matt Download Manager {version} est disponible (publiée le {date}).
 #. text in helpers.rs
 #. Video helpers: {version} = the version of MDM's own copy
 #. {version} = a version number (keep the braces as they are)
 #, machine
-	Mister Download Manager's own copy, version {version}	Copie de Mister Download Manager, version {version}
+	Matt Download Manager's own copy, version {version}	Copie de Matt Download Manager, version {version}
 #. text in unix.rs
 #. Linux, at start, on the terminal: the libraries an X11 window needs aren't installed, so the window opens through Wayland instead, where menus can't be placed under what was clicked; {libraries} = their file names, left as they are
 #, machine
-	Mister Download Manager's X11 window needs {libraries}, which this system lacks: it opens on Wayland instead, where its menus may open away from their titles.	La fenêtre X11 de Mister Download Manager nécessite {libraries}, qui sont absentes de ce système. Elle s’ouvre plutôt sur Wayland, où ses menus peuvent s’ouvrir loin de leurs titres.
+	Matt Download Manager's X11 window needs {libraries}, which this system lacks: it opens on Wayland instead, where its menus may open away from their titles.	La fenêtre X11 de Matt Download Manager nécessite {libraries}, qui sont absentes de ce système. Elle s’ouvre plutôt sur Wayland, où ses menus peuvent s’ouvrir loin de leurs titres.
 #. text in the Scheduler window
 #. Monday, as short as a calendar's column head (two letters in English)
 #, machine
@@ -3305,10 +3305,10 @@
 	Open in browser	Ouvrir dans le navigateur
 #. checkbox in the Add torrent window
 #, machine
-	Open magnet links and .torrent files with Mister Download Manager	Ouvrir les liens magnet et les fichiers .torrent avec Mister Download Manager
+	Open magnet links and .torrent files with Matt Download Manager	Ouvrir les liens magnet et les fichiers .torrent avec Matt Download Manager
 #. text in the tray icon's menu
 #, machine
-	Open Mister Download Manager	Ouvrir Mister Download Manager
+	Open Matt Download Manager	Ouvrir Matt Download Manager
 #. text in extension.rs
 #. step 2 of turning on the Safari extension; Cmd is the Command key
 #, machine
@@ -3379,7 +3379,7 @@
 #. text in remote.rs
 #. remote control page (on a phone): title of the pairing screen
 #, machine
-	Pair with Mister Download Manager	Jumeler avec Mister Download Manager
+	Pair with Matt Download Manager	Jumeler avec Matt Download Manager
 #. text in the Options window
 #. column title: when the device was paired
 #, machine
@@ -3883,7 +3883,7 @@
 	Select or unselect the download with the dotted outline	Sélectionner ou désélectionner le téléchargement avec le contour en pointillés
 #. group box title in the Options window
 #, machine
-	Select sounds for Mister Download Manager events	Sélectionner les sons pour les événements de Mister Download Manager
+	Select sounds for Matt Download Manager events	Sélectionner les sons pour les événements de Matt Download Manager
 #. what a keyboard shortcut does in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #, machine
 	Select the downloads in the box	Sélectionner les téléchargements dans la zone
@@ -4230,7 +4230,7 @@
 	Start download at	Démarrer le téléchargement à
 #. checkbox in the Scheduler window
 #, machine
-	Start download on Mister Download Manager startup	Démarrer le téléchargement au démarrage de Mister Download Manager
+	Start download on Matt Download Manager startup	Démarrer le téléchargement au démarrage de Matt Download Manager
 #. checkbox in the Options window
 #, machine
 	Start downloading immediately while displaying "Download File Info" dialog	Démarrer le téléchargement immédiatement tout en affichant la boîte de dialogue « Informations sur le fichier de téléchargement »
@@ -4265,7 +4265,7 @@
 #, machine
 	Started with the computer, it starts minimized: no notification area shows its icon here	Démarré avec l’ordinateur, il démarre réduit : aucune zone de notification n’affiche son icône ici
 #. text in the Options window
-#. tooltip of "Launch Mister Download Manager on startup": started with the computer, MDM's window stays hidden, its icon in the notification area (system tray)
+#. tooltip of "Launch Matt Download Manager on startup": started with the computer, MDM's window stays hidden, its icon in the notification area (system tray)
 #, machine
 	Started with the computer, it waits in the notification area	Démarré avec l’ordinateur, il attend dans la zone de notification
 #. message or event log entry in the main window
@@ -4494,7 +4494,7 @@
 #. text in extension.rs
 #. a check of Test browser integration: the browsers find MDM's helper program
 #, machine
-	The browsers can find Mister Download Manager	Les navigateurs peuvent trouver Mister Download Manager
+	The browsers can find Matt Download Manager	Les navigateurs peuvent trouver Matt Download Manager
 #. text in the Options window
 #. Options → Remote → Status: the settings were changed; they apply on OK
 #, machine
@@ -4521,7 +4521,7 @@
 #. text in the Scheduler window
 #. tooltip on the Scheduler's "Wake the computer to run this queue"
 #, machine
-	The computer is woken a minute before the start time and kept awake while the queue runs. Mister Download Manager has to be running (it can wait in the notification area).	L’ordinateur est réactivé une minute avant l’heure de début et maintenu actif pendant l’exécution de la file d’attente. Mister Download Manager doit être en cours d’exécution (il peut attendre dans la zone de notification).
+	The computer is woken a minute before the start time and kept awake while the queue runs. Matt Download Manager has to be running (it can wait in the notification area).	L’ordinateur est réactivé une minute avant l’heure de début et maintenu actif pendant l’exécution de la file d’attente. Matt Download Manager doit être en cours d’exécution (il peut attendre dans la zone de notification).
 #. text in the Scheduler window
 #. the Scheduler, under "Wake the computer to run this queue": when it will happen; {date} = e.g. 06/11/2026, {time} = e.g. 22:59:00
 #. {time} = a time of day (keep the braces as they are)
@@ -4652,7 +4652,7 @@
 #, machine
 	the FTP server answered {code} {reply}	le serveur FTP a répondu {code} {reply}
 #. text in extension.rs
-#. a check of Test browser integration: the browsers are set up, but the small helper program they start (misterdownloadmanager-nmhost) is gone
+#. a check of Test browser integration: the browsers are set up, but the small helper program they start (mattdownloadmanager-nmhost) is gone
 #, machine
 	The helper program the browsers start is missing	Le programme d’assistance que les navigateurs démarrent est manquant
 #. message or event log entry in the main window; text in the Options window
@@ -4711,7 +4711,7 @@
 #. text in a dialog box
 #. \\n starts a new line: break lines where they fit the translation
 #, machine
-	The selected download is not complete. Are you sure you want to delete\nit from Mister Download Manager list of downloads?	Le téléchargement sélectionné n’est pas terminé. Êtes-vous sûr de vouloir le supprimer\nde la liste des téléchargements de Mister Download Manager?
+	The selected download is not complete. Are you sure you want to delete\nit from Matt Download Manager list of downloads?	Le téléchargement sélectionné n’est pas terminé. Êtes-vous sûr de vouloir le supprimer\nde la liste des téléchargements de Matt Download Manager?
 #. text in errors.rs
 #, machine
 	the server answered {status}	le serveur a répondu {status}
@@ -5154,7 +5154,7 @@
 #. text in extension.rs
 #. step 8 of turning on the Safari extension
 #, machine
-	Turn on "Mister Download Manager" and allow it on all websites.	Activez « Mister Download Manager » et autorisez-la sur tous les sites web.
+	Turn on "Matt Download Manager" and allow it on all websites.	Activez « Matt Download Manager » et autorisez-la sur tous les sites web.
 #. text in extension.rs
 #. step 4 of turning on the Safari extension; the quoted switch name is what Safari's settings show in this language: use Apple's own words for it, or keep the English name when unsure
 #, machine
@@ -5584,7 +5584,7 @@
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. {version} = a version number (keep the braces as they are)
 #, machine
-	You have the latest version of Mister Download Manager ({version}).	Vous avez la dernière version de Mister Download Manager ({version}).
+	You have the latest version of Matt Download Manager ({version}).	Vous avez la dernière version de Matt Download Manager ({version}).
 #. text in the Help menu's windows (About, updates, shortcuts, Tell a friend)
 #. Check for updates, under the new version's line, when MDM was installed by the Linux system's package manager (pacman, ...), which MDM can't update itself
 #. {version} = a version number (keep the braces as they are)
@@ -6062,9 +6062,9 @@ column	Transfer rate	Taux de transfert
 #, machine
 column	Upload speed	Vitesse de téléversement
 #. text in the browser extension
-#. in the menu under the download button over a video: the page is a list of videos (a playlist), whose videos are chosen in the app's window; keep the name Mister Download Manager as it is
+#. in the menu under the download button over a video: the page is a list of videos (a playlist), whose videos are chosen in the app's window; keep the name Matt Download Manager as it is
 #, machine
-extension	A list of videos: choose them in Mister Download Manager	Une liste de vidéos : choisissez-les dans Mister Download Manager
+extension	A list of videos: choose them in Matt Download Manager	Une liste de vidéos : choisissez-les dans Matt Download Manager
 #. text in the browser extension
 #. on the download button (green) over a video after the app added and started the download; a quality may follow ('· 1080p') and a 'Show' button; MDM is the app's short name, keep it; short
 #, machine
@@ -6079,9 +6079,9 @@ extension	Added to the queue	Ajouté à la file d’attente
 #, machine
 extension	All qualities and subtitles...	Toutes les qualités et les sous-titres...
 #. text in the browser extension
-#. choice under Send downloads to: an MDM running on another computer of the network, such as a home server; keep the name Mister Download Manager as it is
+#. choice under Send downloads to: an MDM running on another computer of the network, such as a home server; keep the name Matt Download Manager as it is
 #, machine
-extension	Another Mister Download Manager (a server)	Un autre Mister Download Manager (un serveur)
+extension	Another Matt Download Manager (a server)	Un autre Matt Download Manager (un serveur)
 #. text in the browser extension
 #. tab above the list of qualities in the menu under the download button over a video: the choices that are sound only (MP3, Opus and the like); short, one word
 #, machine
@@ -6095,7 +6095,7 @@ extension	best	meilleure
 #, machine
 extension	Browser extension	Extension de navigateur
 #. text in the browser extension
-#. menu command of the download button over a video: opens its settings in Mister Download Manager
+#. menu command of the download button over a video: opens its settings in Matt Download Manager
 #. the trailing ... means it is still going on: keep it
 #, machine
 extension	Button settings...	Paramètres du bouton...
@@ -6108,14 +6108,14 @@ extension	can't be saved	ne peut pas être enregistré
 #, machine
 extension	Can't tell which video this is: open its own page and try there	Impossible de savoir de quelle vidéo il s’agit : ouvrez sa propre page et réessayez à cet endroit
 #. text in the browser extension
-#. the toolbar button's status when the browser reaches the app; keep the name Mister Download Manager as it is
+#. the toolbar button's status when the browser reaches the app; keep the name Matt Download Manager as it is
 #, machine
-extension	Connected to Mister Download Manager	Connecté à Mister Download Manager
+extension	Connected to Matt Download Manager	Connecté à Matt Download Manager
 #. text in the browser extension
-#. the toolbar button's status when the browser reaches the app, with the app's version number; keep the name Mister Download Manager as it is
+#. the toolbar button's status when the browser reaches the app, with the app's version number; keep the name Matt Download Manager as it is
 #. {version} = a version number (keep the braces as they are)
 #, machine
-extension	Connected to Mister Download Manager {version}	Connecté à Mister Download Manager {version}
+extension	Connected to Matt Download Manager {version}	Connecté à Matt Download Manager {version}
 #. text in the browser extension
 #. in the menu under the download button over a video: finding the video's qualities failed; the app's own explanation follows on the next line
 #, machine
@@ -6125,17 +6125,17 @@ extension	Could not look it up	Impossible de trouver ses qualités
 #, machine
 extension	Download	Télécharger
 #. text in the browser extension
-#. command in the browser's right-click menu on a page: download the links of the whole page; keep the name Mister Download Manager as it is
+#. command in the browser's right-click menu on a page: download the links of the whole page; keep the name Matt Download Manager as it is
 #, machine
-extension	Download all links with Mister Download Manager	Télécharger tous les liens avec Mister Download Manager
+extension	Download all links with Matt Download Manager	Télécharger tous les liens avec Matt Download Manager
 #. text in the browser extension
 #. first line of the list under the download button over a video: downloads the best quality at once; the quality, its file type and size follow on the same line; short
 #, machine
 extension	Download best	Télécharger la meilleure qualité
 #. text in the browser extension
-#. command in the browser's right-click menu on selected text: download the links in the selection; keep the name Mister Download Manager as it is
+#. command in the browser's right-click menu on selected text: download the links in the selection; keep the name Matt Download Manager as it is
 #, machine
-extension	Download selected links with Mister Download Manager	Télécharger les liens sélectionnés avec Mister Download Manager
+extension	Download selected links with Matt Download Manager	Télécharger les liens sélectionnés avec Matt Download Manager
 #. text in the browser extension
 #. first line of the tooltip of the download button over a video while the app is still finding its qualities
 #, machine
@@ -6145,9 +6145,9 @@ extension	Download the best quality	Télécharger la meilleure qualité
 #, machine
 extension	Download video	Télécharger la vidéo
 #. text in the browser extension
-#. command in the browser's right-click menu on a link, picture, video or sound; keep the name Mister Download Manager as it is
+#. command in the browser's right-click menu on a link, picture, video or sound; keep the name Matt Download Manager as it is
 #, machine
-extension	Download with Mister Download Manager	Télécharger avec Mister Download Manager
+extension	Download with Matt Download Manager	Télécharger avec Matt Download Manager
 #. text in the browser extension
 #. first line of the tooltip of the download button over a video: what one click downloads; $what$ is a quality, a file type and a size, e.g. '1080p MP4 · 412 MB'
 #, machine
@@ -6174,9 +6174,9 @@ extension	Enter its https:// address.	Entrez son adresse https://.
 #, machine
 extension	Get MDM	Obtenir MDM
 #. text in the browser extension
-#. the extension's description in the browser's list of extensions; keep the name Mister Download Manager as it is
+#. the extension's description in the browser's list of extensions; keep the name Matt Download Manager as it is
 #, machine
-extension	Hands downloads from the browser to Mister Download Manager.	Transfère les téléchargements du navigateur vers Mister Download Manager.
+extension	Hands downloads from the browser to Matt Download Manager.	Transfère les téléchargements du navigateur vers Matt Download Manager.
 #. text in the browser extension
 #. link in the toolbar button's popup to the help page
 #, machine
@@ -6206,9 +6206,9 @@ extension	It didn't work. Try again.	Échec. Réessayez.
 #, machine
 extension	It shows no code now: click Pair a device there first.	Il n’affiche aucun code maintenant : cliquez d’abord sur Jumeler un appareil.
 #. text in the browser extension
-#. why a download stayed with the browser: it is a .torrent file and the app's Torrent settings don't open torrents with Mister Download Manager, so the browser keeps it for the user's own torrent program; keep the setting's name as the app shows it
+#. why a download stayed with the browser: it is a .torrent file and the app's Torrent settings don't open torrents with Matt Download Manager, so the browser keeps it for the user's own torrent program; keep the setting's name as the app shows it
 #, machine
-extension	It's a torrent, and Open magnet links and .torrent files with Mister Download Manager is off in Torrent settings.	C’est un torrent, et « Ouvrir les liens magnet et les fichiers .torrent avec Mister Download Manager » est désactivé dans les paramètres de torrent.
+extension	It's a torrent, and Open magnet links and .torrent files with Matt Download Manager is off in Torrent settings.	C’est un torrent, et « Ouvrir les liens magnet et les fichiers .torrent avec Matt Download Manager » est désactivé dans les paramètres de torrent.
 #. text in the browser extension
 #. why a download stayed with the browser: the file is smaller than the app's minimum size setting
 #, machine
@@ -6251,41 +6251,41 @@ extension	MDM didn't answer	MDM n’a pas répondu
 #, machine
 extension	Media on this page	Média sur cette page
 #. text in the browser extension
-#. the extension's name in the browser's list of extensions and on its toolbar button; keep the name Mister Download Manager as it is
+#. the extension's name in the browser's list of extensions and on its toolbar button; keep the name Matt Download Manager as it is
 #, machine
-extension	Mister Download Manager	Mister Download Manager
+extension	Matt Download Manager	Matt Download Manager
 #. text in the browser extension
-#. status when the app was started for a download but didn't answer in time; keep the name Mister Download Manager as it is
+#. status when the app was started for a download but didn't answer in time; keep the name Matt Download Manager as it is
 #, machine
-extension	Mister Download Manager didn't start in time	Mister Download Manager n’a pas démarré à temps
+extension	Matt Download Manager didn't start in time	Matt Download Manager n’a pas démarré à temps
 #. text in the browser extension
-#. status when the app refuses this copy of the extension (another copy is installed, or it came from another store); keep the name Mister Download Manager as it is
+#. status when the app refuses this copy of the extension (another copy is installed, or it came from another store); keep the name Matt Download Manager as it is
 #, machine
-extension	Mister Download Manager doesn't accept this copy of the extension	Mister Download Manager n’accepte pas cette copie de l’extension
+extension	Matt Download Manager doesn't accept this copy of the extension	Matt Download Manager n’accepte pas cette copie de l’extension
 #. text in the browser extension
-#. in the menu under the download button over a video: the app is already looking up other videos and can't look this one up now; keep the name Mister Download Manager as it is
+#. in the menu under the download button over a video: the app is already looking up other videos and can't look this one up now; keep the name Matt Download Manager as it is
 #, machine
-extension	Mister Download Manager is busy with other videos	Mister Download Manager est occupée avec d’autres vidéos
+extension	Matt Download Manager is busy with other videos	Matt Download Manager est occupée avec d’autres vidéos
 #. text in the browser extension
-#. shown briefly on the download button when the app could not be reached; keep the name Mister Download Manager as it is
+#. shown briefly on the download button when the app could not be reached; keep the name Matt Download Manager as it is
 #, machine
-extension	Mister Download Manager isn't installed or didn't start	Mister Download Manager n’est pas installé ou n’a pas démarré
+extension	Matt Download Manager isn't installed or didn't start	Matt Download Manager n’est pas installé ou n’a pas démarré
 #. text in the browser extension
-#. status when the browser can't find the app's connection; keep the name Mister Download Manager as it is
+#. status when the browser can't find the app's connection; keep the name Matt Download Manager as it is
 #, machine
-extension	Mister Download Manager isn't installed, or its browser integration isn't set up	Mister Download Manager n’est pas installé, ou son intégration au navigateur n’est pas configurée
+extension	Matt Download Manager isn't installed, or its browser integration isn't set up	Matt Download Manager n’est pas installé, ou son intégration au navigateur n’est pas configurée
 #. text in the browser extension
-#. in the menu under the download button over a video: the app needs the yt-dlp tool (a program's name, keep it as it is) to find this video's qualities, and it isn't installed; keep the name Mister Download Manager as it is
+#. in the menu under the download button over a video: the app needs the yt-dlp tool (a program's name, keep it as it is) to find this video's qualities, and it isn't installed; keep the name Matt Download Manager as it is
 #, machine
-extension	Mister Download Manager needs yt-dlp for this video	Mister Download Manager a besoin de yt-dlp pour cette vidéo
+extension	Matt Download Manager needs yt-dlp for this video	Matt Download Manager a besoin de yt-dlp pour cette vidéo
 #. text in the browser extension
-#. tooltip of the switch Send downloads through this browser's proxy or VPN extension; keep the name Mister Download Manager as it is
+#. tooltip of the switch Send downloads through this browser's proxy or VPN extension; keep the name Matt Download Manager as it is
 #, machine
-extension	Mister Download Manager then downloads through the same proxy as this browser. The browser asks you once to allow it; turning this off takes that back.	Mister Download Manager télécharge alors par le même serveur mandataire que ce navigateur. Le navigateur vous demande une fois de l’autoriser; la désactivation de cette option annule cette autorisation.
+extension	Matt Download Manager then downloads through the same proxy as this browser. The browser asks you once to allow it; turning this off takes that back.	Matt Download Manager télécharge alors par le même serveur mandataire que ce navigateur. Le navigateur vous demande une fois de l’autoriser; la désactivation de cette option annule cette autorisation.
 #. text in the browser extension
-#. tooltip of the switch Send downloads through this browser's proxy or VPN extension in Chrome, Edge and the other Chromium browsers (they ask for no permission at the switch); keep the name Mister Download Manager as it is
+#. tooltip of the switch Send downloads through this browser's proxy or VPN extension in Chrome, Edge and the other Chromium browsers (they ask for no permission at the switch); keep the name Matt Download Manager as it is
 #, machine
-extension	Mister Download Manager then downloads through the same proxy as this browser. While this is off, the extension doesn't read the browser's proxy.	Mister Download Manager télécharge alors via le même proxy que ce navigateur. Lorsque cette option est désactivée, l’extension ne lit pas le proxy du navigateur.
+extension	Matt Download Manager then downloads through the same proxy as this browser. While this is off, the extension doesn't read the browser's proxy.	Matt Download Manager télécharge alors via le même proxy que ce navigateur. Lorsque cette option est désactivée, l’extension ne lit pas le proxy du navigateur.
 #. text in the browser extension
 #. the small arrow next to the Download video button that opens its menu (read aloud by screen readers)
 #, machine
@@ -6321,13 +6321,13 @@ extension	Off on this site	Désactivé sur ce site
 #, machine
 extension	Open it	Ouvrir
 #. text in the browser extension
-#. help under the pairing boxes; Options, Remote and Pair a device are the app's window, tab and button; keep misterdownloadmanager-cli pair as it is
+#. help under the pairing boxes; Options, Remote and Pair a device are the app's window, tab and button; keep mattdownloadmanager-cli pair as it is
 #, machine
-extension	Open its address once and accept its certificate, then enter a code from its Options, Remote, Pair a device (or misterdownloadmanager-cli pair).	Ouvrez son adresse une fois et acceptez son certificat, puis entrez un code de ses Options, Distant, Jumeler un appareil (ou misterdownloadmanager-cli pair).
+extension	Open its address once and accept its certificate, then enter a code from its Options, Remote, Pair a device (or mattdownloadmanager-cli pair).	Ouvrez son adresse une fois et acceptez son certificat, puis entrez un code de ses Options, Distant, Jumeler un appareil (ou mattdownloadmanager-cli pair).
 #. text in the browser extension
-#. button in the toolbar button's popup; keep the name Mister Download Manager as it is
+#. button in the toolbar button's popup; keep the name Matt Download Manager as it is
 #, machine
-extension	Open Mister Download Manager	Ouvrir Mister Download Manager
+extension	Open Matt Download Manager	Ouvrir Matt Download Manager
 #. text in the browser extension
 #. button on the download button over a video in a feed: opens the post the video belongs to in a new tab; verb; very short
 #, machine
@@ -6382,14 +6382,14 @@ extension	Send downloads through this browser's proxy or VPN extension	Envoyer l
 #, machine
 extension	Send downloads to	Envoyer les téléchargements à
 #. text in the browser extension
-#. on the download button over a video right after it was clicked, while the download goes to the app; MDM is Mister Download Manager's short name, keep it as it is; short
+#. on the download button over a video right after it was clicked, while the download goes to the app; MDM is Matt Download Manager's short name, keep it as it is; short
 #. the trailing ... means it is still going on: keep it
 #, machine
 extension	Sending to MDM...	Envoi à MDM...
 #. text in the browser extension
-#. shown briefly on the download button after it was clicked; keep the name Mister Download Manager as it is
+#. shown briefly on the download button after it was clicked; keep the name Matt Download Manager as it is
 #, machine
-extension	Sent to Mister Download Manager	Envoyé à Mister Download Manager
+extension	Sent to Matt Download Manager	Envoyé à Matt Download Manager
 #. text in the browser extension
 #. button on the download button over a video after a download was added: shows that download in the app's window; verb; very short
 #, machine
@@ -6407,9 +6407,9 @@ extension	Take downloads from this browser	Intercepter les téléchargements de 
 #, machine
 extension	The Chrome Web Store's rules keep this copy of the add-on away from this site's videos. Help says what you can do.	Les règles du Chrome Web Store empêchent cette copie de l’extension d’agir sur les vidéos de ce site. L’aide explique ce que vous pouvez faire.
 #. text in the browser extension
-#. status when the connection to the app broke off (often security software blocking it); keep the name Mister Download Manager as it is
+#. status when the connection to the app broke off (often security software blocking it); keep the name Matt Download Manager as it is
 #, machine
-extension	The connection to Mister Download Manager failed	La connexion à Mister Download Manager a échoué
+extension	The connection to Matt Download Manager failed	La connexion à Matt Download Manager a échoué
 #. text in the browser extension
 #. why a download stayed with the browser: the user limited the extension's access to web sites in the browser, so it can't pass the sign-in on
 #, machine
@@ -6423,7 +6423,7 @@ extension	The last download was left to the browser.	Le dernier téléchargement
 #, machine
 extension	This browser isn't ticked in Options → General.	Ce navigateur n’est pas coché dans Options → Général.
 #. text in the browser extension
-#. choice under Send downloads to: the Mister Download Manager on this computer
+#. choice under Send downloads to: the Matt Download Manager on this computer
 #, machine
 extension	This computer	Cet ordinateur
 #. text in the browser extension
@@ -6443,9 +6443,9 @@ extension	Turn on	Activer
 #, machine
 extension	Undo	Annuler
 #. text in the browser extension
-#. status when the app is older than the extension; keep the name Mister Download Manager as it is
+#. status when the app is older than the extension; keep the name Matt Download Manager as it is
 #, machine
-extension	Update Mister Download Manager to use everything this extension offers	Mettez à jour Mister Download Manager pour utiliser toutes les fonctionnalités de cette extension
+extension	Update Matt Download Manager to use everything this extension offers	Mettez à jour Matt Download Manager pour utiliser toutes les fonctionnalités de cette extension
 #. text in the browser extension
 #. why a download stayed with the browser: the app's setting 'Use advanced browser integration' is off; keep the setting's name as the app shows it
 #, machine
@@ -6573,7 +6573,7 @@ key	Up / Down	Haut / Bas
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	&About Mister Download Manager	À &propos de Mister Download Manager
+menu	&About Matt Download Manager	À &propos de Matt Download Manager
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
@@ -6989,7 +6989,7 @@ menu	Metro	Metro
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine
-menu	Mister Download Manager &Home Page	Page d’accueil de &Mister Download Manager
+menu	Matt Download Manager &Home Page	Page d’accueil de &Matt Download Manager
 #. menu command in the main window
 #, machine
 menu	Move/Rename (Ctrl-M)	Déplacer/Renommer (Ctrl+M)
@@ -7122,7 +7122,7 @@ menu	Select &all	Sélectionner &tout
 menu	Show &drop target	Afficher la &cible de dépôt
 #. menu command in the main window
 #, machine
-menu	Show Mister Download Manager	Afficher Mister Download Manager
+menu	Show Matt Download Manager	Afficher Matt Download Manager
 #. menu command in the main window
 #. & marks the keyboard shortcut letter: keep one & before a letter of the translation
 #, machine

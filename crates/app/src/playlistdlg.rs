@@ -58,7 +58,14 @@ fn picks(merge: bool) -> Vec<Pick> {
     let mut out = vec![Pick {
         // i18n: a quality in Download video for a whole playlist: each video's best
         label: crate::i18n::t("Best quality").to_owned(),
-        selector: if merge { "bv*+ba/b" } else { "b" }.into(),
+        // With ffmpeg, a sound an MP4 holds first (AAC in an M4A): Opus in an MP4 plays silent
+        // in Windows' own players, so a page that has one is merged with that instead.
+        selector: if merge {
+            "bv*+ba[ext=m4a]/bv*+ba/b"
+        } else {
+            "b"
+        }
+        .into(),
         ext: "mp4",
     }];
     for h in HEIGHTS {
@@ -69,20 +76,15 @@ fn picks(merge: bool) -> Vec<Pick> {
                 &[("height", &h.to_string())],
             ),
             selector: if merge {
-                format!("bv*[height<={h}]+ba/b[height<={h}]")
+                format!("bv*[height<={h}]+ba[ext=m4a]/bv*[height<={h}]+ba/b[height<={h}]")
             } else {
                 format!("b[height<={h}]")
             },
             ext: "mp4",
         });
     }
-    out.push(Pick {
-        // i18n: a quality in Download video for a whole playlist: only the sound, as the site has it (not converted)
-        label: crate::i18n::t("Audio only, original").to_owned(),
-        selector: "ba".into(),
-        ext: "m4a",
-    });
-    // MP3 (ffmpeg converts it), as a single video offers it: VBR, then each bitrate.
+    // MP3 (ffmpeg converts it), as a single video offers it: VBR, then each bitrate. The
+    // list's qualities are the heights and the MP3s, as the single video's are (2026-11-16).
     if merge {
         use mdm_tools::resolve::{AUDIO_ONLY, MP3, MP3_RATES};
         let vbr = std::iter::once((format!("{AUDIO_ONLY} MP3 VBR"), 0));
@@ -94,19 +96,6 @@ fn picks(merge: bool) -> Vec<Pick> {
                 label: crate::videodlg::choice_label(&label),
                 selector: format!("{MP3}{kbps}"),
                 ext: "mp3",
-            });
-        }
-        // Opus (YouTube's own moved into an .opus file) and FLAC, as a single video offers
-        // them (#70).
-        use mdm_tools::resolve::{FLAC, OPUS};
-        for (label, selector, ext) in [
-            (format!("{AUDIO_ONLY} OPUS"), OPUS, "opus"),
-            (format!("{AUDIO_ONLY} FLAC"), FLAC, "flac"),
-        ] {
-            out.push(Pick {
-                label: crate::videodlg::choice_label(&label),
-                selector: selector.into(),
-                ext,
             });
         }
     }
@@ -695,27 +684,26 @@ impl Drop for PlaylistView {
 mod tests {
     use super::*;
 
-    /// The qualities for a whole list: with ffmpeg the merged ones and MP3, without it only
-    /// single files; heights as "at most".
+    /// The qualities for a whole list: with ffmpeg the heights and the MP3s (nothing else, as in
+    /// the single video's list), without it only single files; heights as "at most".
     #[test]
     fn qualities_for_a_list() {
         let m = picks(true);
-        assert_eq!(m[0].selector, "bv*+ba/b");
+        assert_eq!(m[0].selector, "bv*+ba[ext=m4a]/bv*+ba/b");
         assert_eq!(
             m[DEFAULT_PICK].selector,
-            "bv*[height<=1080]+ba/b[height<=1080]"
+            "bv*[height<=1080]+ba[ext=m4a]/bv*[height<=1080]+ba/b[height<=1080]"
         );
         assert!(m.iter().any(|p| p.selector == "mp3:320" && p.ext == "mp3"));
-        assert!(m.iter().any(|p| p.selector == "ba"));
-        assert!(m.iter().any(|p| p.selector == "opus:" && p.ext == "opus"));
-        assert!(m.iter().any(|p| p.selector == "flac:" && p.ext == "flac"));
+        assert!(!m.iter().any(|p| p.selector == "ba"));
+        assert!(!m.iter().any(|p| p.ext == "opus" || p.ext == "flac"));
         let plain = picks(false);
         assert_eq!(plain[DEFAULT_PICK].selector, "b[height<=1080]");
         assert!(!plain.iter().any(|p| p.selector.starts_with("mp3:")));
         assert!(!plain.iter().any(|p| p.ext == "opus" || p.ext == "flac"));
         // #611: the "Audio only" ones save only the sound, the heights don't.
         for p in m.iter().chain(&plain) {
-            let audio = p.selector == "ba" || p.ext != "mp4";
+            let audio = p.ext != "mp4";
             assert_eq!(p.sound_only(), audio, "{}", p.selector);
         }
     }

@@ -1,12 +1,12 @@
 {
   "name": {
-    "message": "Mister Download Manager"
+    "message": "Matt Download Manager"
   },
   "description": {
-    "message": "Preuzimanja iz preglednika prosljeđuje u Mister Download Manager."
+    "message": "Preuzimanja iz preglednika prosljeđuje u Matt Download Manager."
   },
   "menu": {
-    "message": "Preuzmi pomoću Mister Download Manager"
+    "message": "Preuzmi pomoću Matt Download Manager"
   },
   "video_download": {
     "message": "Preuzmi videozapis"
@@ -30,19 +30,19 @@
     "message": "Postavke gumba..."
   },
   "video_sent": {
-    "message": "Poslano aplikaciji Mister Download Manager"
+    "message": "Poslano aplikaciji Matt Download Manager"
   },
   "menu_selected": {
-    "message": "Preuzmi odabrane veze s Mister Download Manager"
+    "message": "Preuzmi odabrane veze s Matt Download Manager"
   },
   "menu_all": {
-    "message": "Preuzmi sve veze s Mister Download Manager"
+    "message": "Preuzmi sve veze s Matt Download Manager"
   },
   "status_connected": {
-    "message": "Povezano s Mister Download Manager"
+    "message": "Povezano s Matt Download Manager"
   },
   "status_connected_version": {
-    "message": "Povezano s Mister Download Manager $version$",
+    "message": "Povezano s Matt Download Manager $version$",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -54,22 +54,22 @@
     "message": "Pauzirano: preuzimanja ostaju u pregledniku"
   },
   "status_not_installed": {
-    "message": "Mister Download Manager nije instaliran ili njegova integracija preglednika nije postavljena"
+    "message": "Matt Download Manager nije instaliran ili njegova integracija preglednika nije postavljena"
   },
   "status_forbidden": {
-    "message": "Mister Download Manager ne prihvaća ovu kopiju proširenja"
+    "message": "Matt Download Manager ne prihvaća ovu kopiju proširenja"
   },
   "status_not_running": {
-    "message": "Mister Download Manager se nije pokrenuo na vrijeme"
+    "message": "Matt Download Manager se nije pokrenuo na vrijeme"
   },
   "status_host_failed": {
-    "message": "Veza s aplikacijom Mister Download Manager nije uspjela"
+    "message": "Veza s aplikacijom Matt Download Manager nije uspjela"
   },
   "status_too_large": {
     "message": "Pojedinosti o ovom preuzimanju bile su prevelike za prijenos"
   },
   "status_update_app": {
-    "message": "Ažurirajte Mister Download Manager da biste koristili sve što nudi ovo proširenje"
+    "message": "Ažurirajte Matt Download Manager da biste koristili sve što nudi ovo proširenje"
   },
   "popup_take": {
     "message": "Preuzimaj datoteke iz ovog preglednika"
@@ -78,10 +78,10 @@
     "message": "Šalji preuzimanja putem proxyja ili VPN proširenja ovog preglednika"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager zatim preuzima putem istog proxyja kao i ovaj preglednik. Preglednik će vas jednom pitati želite li to dopustiti; isključivanjem ove opcije to se poništava."
+    "message": "Matt Download Manager zatim preuzima putem istog proxyja kao i ovaj preglednik. Preglednik će vas jednom pitati želite li to dopustiti; isključivanjem ove opcije to se poništava."
   },
   "popup_proxy_title_chromium": {
-    "message": "Mister Download Manager zatim preuzima putem istog proxyja kao i ovaj preglednik. Dok je ovo isključeno, proširenje ne čita proxy preglednika."
+    "message": "Matt Download Manager zatim preuzima putem istog proxyja kao i ovaj preglednik. Dok je ovo isključeno, proširenje ne čita proxy preglednika."
   },
   "popup_exclude_site": {
     "message": "Nikad ne preuzimaj s $site$",
@@ -105,7 +105,7 @@
     }
   },
   "popup_open": {
-    "message": "Otvori Mister Download Manager"
+    "message": "Otvori Matt Download Manager"
   },
   "popup_options": {
     "message": "Mogućnosti..."
@@ -150,7 +150,7 @@
     "message": "Opcija „Koristi naprednu integraciju preglednika” isključena je u Mogućnosti → Općenito."
   },
   "declined_torrents": {
-    "message": "To je torrent, a opcija Otvori magnetne veze i .torrent datoteke s Mister Download Manager isključena je u postavkama torrenta."
+    "message": "To je torrent, a opcija Otvori magnetne veze i .torrent datoteke s Matt Download Manager isključena je u postavkama torrenta."
   },
   "declined_site_access": {
     "message": "Proširenje ne smije čitati ovu stranicu (pristup stranici preglednika)."
@@ -195,16 +195,16 @@
     "message": "Ovdje nema videozapisa za preuzimanje"
   },
   "video_playlist": {
-    "message": "Popis videozapisa: odaberite ih u Mister Download Manager"
+    "message": "Popis videozapisa: odaberite ih u Matt Download Manager"
   },
   "video_no_ytdlp": {
-    "message": "Mister Download Manager treba yt-dlp za ovaj videozapis"
+    "message": "Matt Download Manager treba yt-dlp za ovaj videozapis"
   },
   "video_too_long": {
     "message": "Traženje je trajalo predugo"
   },
   "video_busy": {
-    "message": "Mister Download Manager je zauzet drugim videozapisima"
+    "message": "Matt Download Manager je zauzet drugim videozapisima"
   },
   "video_queued": {
     "message": "Dodano u red čekanja"
@@ -228,7 +228,7 @@
     "message": "Ovo računalo"
   },
   "popup_send_remote": {
-    "message": "Drugi Mister Download Manager (poslužitelj)"
+    "message": "Drugi Matt Download Manager (poslužitelj)"
   },
   "popup_remote_code": {
     "message": "Kôd za uparivanje"
@@ -240,7 +240,7 @@
     "message": "Uparivanje"
   },
   "popup_remote_help": {
-    "message": "Otvorite njegovu adresu jednom i prihvatite njegov certifikat, a zatim unesite kôd iz njegovih Mogućnosti, Daljinski, Uparite uređaj (ili misterdownloadmanager-cli pair)."
+    "message": "Otvorite njegovu adresu jednom i prihvatite njegov certifikat, a zatim unesite kôd iz njegovih Mogućnosti, Daljinski, Uparite uređaj (ili mattdownloadmanager-cli pair)."
   },
   "status_remote": {
     "message": "Preuzimanja idu na $address$",
@@ -324,7 +324,7 @@
     "message": "Sve kvalitete i titlovi..."
   },
   "video_failed": {
-    "message": "Mister Download Manager nije instaliran ili se nije pokrenuo"
+    "message": "Matt Download Manager nije instaliran ili se nije pokrenuo"
   },
   "video_download_best": {
     "message": "Preuzmi najbolje"

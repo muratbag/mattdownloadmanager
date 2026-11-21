@@ -1,22 +1,25 @@
 //! The Help menu (D-020): the user guide and the home page on the website (docs/ made into
-//! pages, in the interface language), problem reports on GitHub (pre-filled), update checks
-//! against GitHub Releases (on demand, and at every start and once a day while running), About,
-//! Keyboard shortcuts and Tell a friend.
+//! pages, in the interface language), problem reports, About, Keyboard shortcuts and Tell a
+//! friend. Check for updates (on demand, at every start and once a day while running) reads the
+//! update feed on this project's own server ([`UPDATE_FEED`]); a build that has no feed (offline,
+//! or the file is missing) says so and changes nothing.
 
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use egui::{pos2, vec2};
 
+use mdm_tools::update::{Arch, Install};
+
 use crate::dialogs::{Outcome, window};
 use crate::winui::{self, ButtonKind, r};
 
-/// The repository: problem reports, releases, source, licences.
-pub const REPO: &str = "https://github.com/anefzaoui/misterdownloadmanager";
-/// The creator's GitHub Sponsors page: Help → Support MDM, About's last line. The website, the
-/// extension's popup and the repository's Sponsor button (.github/FUNDING.yml) point there too.
-pub const SPONSORS: &str = "https://github.com/sponsors/anefzaoui";
-const LATEST: &str = "https://api.github.com/repos/anefzaoui/misterdownloadmanager/releases/latest";
+/// The project's repository: problem reports, source, licences. A placeholder: this build ships
+/// without a GitHub project of its own; point it at the real one when there is one.
+pub const REPO: &str = "https://idm.teachermatt.com/licenses.html";
+/// The project's GitHub Sponsors page: Help → Support MDM, About's last line. A placeholder like
+/// [`REPO`] (the extension's popup points there too).
+pub const SPONSORS: &str = "https://idm.teachermatt.com/pricing.html";
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const COMMIT: &str = env!("MDM_COMMIT");
 /// While MDM runs, the automatic check comes again this often (it also checks at every start).
@@ -26,7 +29,7 @@ pub const CHECK_AFTER_START: std::time::Duration = std::time::Duration::from_sec
 
 /// The official website: the home page and the user guide, docs/*.md made into pages by
 /// tools/website/build.py. GitHub (REPO) keeps what is GitHub's: issues, releases, the source.
-pub const SITE: &str = "https://misterdownloadmanager.com";
+pub const SITE: &str = "https://idm.teachermatt.com";
 
 /// The website's languages besides English, its folders (`/de/help/`): tools/website/sitei18n.py's
 /// LANGS, which a test keeps this list equal to. English is at the root.
@@ -85,6 +88,19 @@ pub fn support() {
     }
 }
 
+/// Help → Rate on the Chrome Web Store: the listing's page in the browser, asked for only (never
+/// in an off-screen test run). A build with no store listing opens the browser-integration guide
+/// instead.
+pub fn rate_in_store() {
+    if crate::offscreen() {
+        return;
+    }
+    match mdm_ipc::extension::store_page() {
+        Some(page) => crate::launch::open(&page),
+        None => open_page("browser-integration.md"),
+    }
+}
+
 /// A new GitHub issue on the Bug report form (.github/ISSUE_TEMPLATE/bug.yml), filled with
 /// what MDM knows: its version, the system and its version, how it was installed, the
 /// language. The parameters are the form's field ids (all text fields: GitHub's page drops a
@@ -98,7 +114,7 @@ pub fn report_problem() {
             let enc =
                 |s: &str| url::form_urlencoded::byte_serialize(s.as_bytes()).collect::<String>();
             let url = report_fields().iter().fold(
-                format!("{REPO}/issues/new?template=bug.yml"),
+                format!("{SITE}/help.html#support"),
                 |url, (k, v)| format!("{url}&{k}={}", enc(v)),
             );
             let _ = open::that_detached(url);
@@ -151,16 +167,31 @@ fn report_fields() -> Vec<(&'static str, String)> {
 // ---------------------------------------------------------------------------------------------
 // Updates
 
+/// Where this build updates itself from: one JSON release feed on this project's own server.
+/// THIS is the place the update address lives: change it (and [`UPDATE_HOST`] with it) and
+/// nothing else in the app names a server. The format is in BRANDING.md ("Update feed").
+pub const UPDATE_FEED: &str = "https://idm.teachermatt.com/update.json";
+/// The only host the update's files may be downloaded from: the feed's own (subpaths of it are
+/// its folders). A build never fetches an update from anywhere else.
+pub const UPDATE_HOST: &str = "idm.teachermatt.com";
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct Release {
     pub version: String,
-    /// `YYYY-MM-DD`.
+    /// `YYYY-MM-DD`; empty when the feed names none.
     pub date: String,
+    /// What the update window's "What's new" box shows (the changelog's address when the feed
+    /// has no inline text).
     pub notes: String,
-    /// The release's page (its files are there too).
+    /// The release's page: Download opens it when this copy has no file of its own.
     pub page: String,
     /// Its files: (name, download address); Update now takes this copy's from them.
     pub assets: Vec<(String, String)>,
+    /// Each file's SHA-256 (lower-case hex), by name: Update now checks the file it downloaded
+    /// against it before anything is put in place.
+    pub hashes: Vec<(String, String)>,
+    /// The only host [`assets`](Self::assets) may be downloaded from (the feed's own).
+    pub host: String,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -171,9 +202,9 @@ pub enum Found {
 
 pub type Slot = Arc<Mutex<Option<Result<Found, String>>>>;
 
-/// Ask GitHub for the latest release in the background; the answer lands in the slot. Whatever
-/// goes wrong, even a panic in the check, lands there as a failed check (#1123): the slot never
-/// stays empty, which would leave Check for updates waiting for good.
+/// Ask the update feed for the latest release in the background; the answer lands in the slot.
+/// Whatever goes wrong, even a panic in the check, lands there as a failed check (#1123): the
+/// slot never stays empty, which would leave Check for updates waiting for good.
 pub fn check(rt: &tokio::runtime::Handle, ctx: &egui::Context) -> Slot {
     let slot: Slot = Arc::new(Mutex::new(None));
     let (out, ctx) = (slot.clone(), ctx.clone());
@@ -191,36 +222,52 @@ pub fn check(rt: &tokio::runtime::Handle, ctx: &egui::Context) -> Slot {
 fn settled(joined: Result<Result<Found, String>, tokio::task::JoinError>) -> Result<Found, String> {
     joined.unwrap_or_else(|e| {
         tracing::warn!("the update check stopped: {e}");
-        Err(crate::i18n::t("Mister Download Manager hit an internal error").to_owned())
+        Err(crate::i18n::t("Matt Download Manager hit an internal error").to_owned())
     })
 }
 
 async fn latest() -> Result<Found, String> {
-    // MDM_UPDATE_FEED: another address for the latest release (tests of Update now, as
-    // MDM_DATA_DIR is for a separate list).
-    let feed = std::env::var("MDM_UPDATE_FEED").unwrap_or_else(|_| LATEST.to_owned());
+    // A release build reads UPDATE_FEED, and may download only from UPDATE_HOST (so it can never
+    // fetch the upstream project's release). Offline, or with no feed there, the check fails with
+    // a reason and nothing changes (the window says it couldn't check, with Retry).
+    // MDM_UPDATE_FEED: another address, for the end-to-end tests of Update now (as MDM_DATA_DIR
+    // is for a separate list); its own host is then the one its files may come from.
+    let (feed, host) = match std::env::var("MDM_UPDATE_FEED") {
+        Ok(feed) => {
+            let host = feed_host(&feed).unwrap_or_else(|| UPDATE_HOST.to_owned());
+            (feed, host)
+        }
+        Err(_) => (UPDATE_FEED.to_owned(), UPDATE_HOST.to_owned()),
+    };
     let net = crate::settings::own_net();
     // The chosen DNS and network adapter, as downloads have them (#36, #35).
     let client = mdm_engine::net::client_builder(&net.dns, &net.route, &feed)
         .map_err(|e| e.to_string())?
-        .user_agent(concat!("MisterDownloadManager/", env!("CARGO_PKG_VERSION")))
+        .user_agent(concat!("MattDownloadManager/", env!("CARGO_PKG_VERSION")))
         .timeout(Duration::from_secs(20))
         .build()
         .map_err(|e| e.to_string())?;
-    fetch(&client, &feed, VERSION).await
+    fetch(&client, &feed, &host, VERSION).await
 }
 
-/// The latest release at `feed` against the running `current` version.
-async fn fetch(client: &reqwest::Client, feed: &str, current: &str) -> Result<Found, String> {
-    let resp = client
-        .get(feed)
-        .header("Accept", "application/vnd.github+json")
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
-    // No release published yet: nothing newer than this.
+/// The host a feed address names, None when it isn't an address.
+fn feed_host(feed: &str) -> Option<String> {
+    url::Url::parse(feed).ok()?.host_str().map(str::to_owned)
+}
+
+/// The latest release at `feed` against the running `current` version; its files may only be
+/// downloaded from `host` (the feed's own).
+async fn fetch(
+    client: &reqwest::Client,
+    feed: &str,
+    host: &str,
+    current: &str,
+) -> Result<Found, String> {
+    let resp = client.get(feed).send().await.map_err(|e| e.to_string())?;
+    // No feed there: nothing checked, and nothing changed (the window offers Retry).
     if resp.status() == reqwest::StatusCode::NOT_FOUND {
-        return Ok(Found::Latest);
+        // i18n: why updates could not be checked: the update feed is not on the server (the file is missing)
+        return Err(crate::i18n::t("the update feed is missing on the server").to_owned());
     }
     let text = resp
         .error_for_status()
@@ -228,14 +275,19 @@ async fn fetch(client: &reqwest::Client, feed: &str, current: &str) -> Result<Fo
         .text()
         .await
         .map_err(|e| e.to_string())?;
-    parse_release(&text, current)
+    parse_release(&text, host, current)
 }
 
-/// GitHub's latest-release JSON against the running `current` version.
-fn parse_release(json: &str, current: &str) -> Result<Found, String> {
+/// The update feed's JSON (BRANDING.md, "Update feed") against the running `current` version.
+/// Its files that aren't on `host`, or that have no usable SHA-256, are left out: an update is
+/// only downloaded from the feed's own server, and only when its hash is known.
+fn parse_release(json: &str, host: &str, current: &str) -> Result<Found, String> {
     let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
-    let tag = v["tag_name"].as_str().unwrap_or("").trim();
-    let version = tag.trim_start_matches(['v', 'V']);
+    let version = v["version"]
+        .as_str()
+        .unwrap_or("")
+        .trim()
+        .trim_start_matches(['v', 'V']);
     // A number MDM can't read ("next", "1.x") would compare as 0 and pass for older: no answer
     // is better than a wrong one.
     let numeric = version
@@ -250,26 +302,72 @@ fn parse_release(json: &str, current: &str) -> Result<Found, String> {
     if !newer(version, current) {
         return Ok(Found::Latest);
     }
-    let s = |k: &str| v[k].as_str().unwrap_or("").to_owned();
+    let text = |k: &str| v[k].as_str().unwrap_or("").trim().to_owned();
+    let changelog = text("notes");
+    let page = match text("page") {
+        page if page.is_empty() => changelog.clone(),
+        page => page,
+    };
+    let inline = text("notes_text");
+    let notes = if inline.is_empty() {
+        page.clone()
+    } else {
+        inline
+    };
+    let (mut assets, mut hashes) = (Vec::new(), Vec::new());
+    if let Some(releases) = v.get("releases").and_then(|r| r.as_object()) {
+        for (key, arch) in [("x64", Arch::X64), ("arm64", Arch::Arm64), ("x86", Arch::X86)] {
+            let Some(files) = releases.get(key).and_then(|f| f.as_object()) else {
+                continue;
+            };
+            for (kind, install) in [
+                ("setup", Install::Installer),
+                ("portable", Install::PortableZip),
+                ("zip", Install::PlainZip),
+            ] {
+                let url = files
+                    .get(kind)
+                    .and_then(|u| u.as_str())
+                    .unwrap_or("")
+                    .trim();
+                let sha = files
+                    .get(&format!("{kind}_sha256"))
+                    .and_then(|h| h.as_str())
+                    .unwrap_or("")
+                    .trim();
+                if !feed_file_ok(url, host) || !sha256_hex(sha) {
+                    continue;
+                }
+                let Some(name) = install.assets_on(Some(arch), version).into_iter().next() else {
+                    continue;
+                };
+                assets.push((name.clone(), url.to_owned()));
+                hashes.push((name, sha.to_ascii_lowercase()));
+            }
+        }
+    }
     Ok(Found::Newer(Release {
         version: version.to_owned(),
-        date: s("published_at").chars().take(10).collect(),
-        notes: s("body"),
-        page: s("html_url"),
-        assets: v["assets"]
-            .as_array()
-            .map(|a| {
-                a.iter()
-                    .filter_map(|x| {
-                        Some((
-                            x["name"].as_str()?.to_owned(),
-                            x["browser_download_url"].as_str()?.to_owned(),
-                        ))
-                    })
-                    .collect()
-            })
-            .unwrap_or_default(),
+        date: text("date").chars().take(10).collect(),
+        notes,
+        page,
+        assets,
+        hashes,
+        host: host.to_owned(),
     }))
+}
+
+/// Whether `url` is a file this build may download: http(s) on the feed's own host.
+fn feed_file_ok(url: &str, host: &str) -> bool {
+    !host.is_empty()
+        && url::Url::parse(url).is_ok_and(|u| {
+            matches!(u.scheme(), "https" | "http") && u.host_str() == Some(host)
+        })
+}
+
+/// Whether `sha` is a SHA-256 in hex: what the feed names for each file.
+fn sha256_hex(sha: &str) -> bool {
+    sha.len() == 64 && sha.bytes().all(|b| b.is_ascii_hexdigit())
 }
 
 /// `a` is a later version than `b` (numeric parts; a pre-release `-…` counts before its
@@ -395,7 +493,7 @@ impl Updates {
                     Some(Ok(Found::Latest)) => {
                         let line = crate::i18n::fmt(
                             crate::i18n::t(
-                                "You have the latest version of Mister Download Manager ({version}).",
+                                "You have the latest version of Matt Download Manager ({version}).",
                             ),
                             &[("version", VERSION)],
                         );
@@ -413,12 +511,20 @@ impl Updates {
                         }
                     }
                     Some(Ok(Found::Newer(rel))) => {
-                        let line = crate::i18n::fmt(
-                            crate::i18n::t(
-                                "Mister Download Manager {version} is available (released {date}).",
-                            ),
-                            &[("version", &rel.version), ("date", &rel.date)],
-                        );
+                        let line = if rel.date.is_empty() {
+                            crate::i18n::fmt(
+                                // i18n: Check for updates, when the new version's feed names no date
+                                crate::i18n::t("Matt Download Manager {version} is available."),
+                                &[("version", &rel.version)],
+                            )
+                        } else {
+                            crate::i18n::fmt(
+                                crate::i18n::t(
+                                    "Matt Download Manager {version} is available (released {date}).",
+                                ),
+                                &[("version", &rel.version), ("date", &rel.date)],
+                            )
+                        };
                         winui::fit(
                             ui,
                             &p,
@@ -481,7 +587,7 @@ impl Updates {
                         download = Some(rel.clone());
                     }
                 }
-                // Update now when this copy's file is in the signed release (and it hasn't just
+                // Update now when the feed lists this copy's file (and it hasn't just
                 // failed); else Download opens the release's page.
                 let asset = download.as_ref().and_then(|rel| {
                     crate::update::asset_for(install, &rel.version, &rel.assets)
@@ -613,19 +719,34 @@ impl Updates {
                         } else {
                             ButtonKind::Disabled
                         };
+                        // The feed names the file's address and its SHA-256; both were checked
+                        // when the release was read (only the feed's own host is taken).
+                        let file = rel
+                            .assets
+                            .iter()
+                            .find(|(name, _)| name == &asset)
+                            .map(|(_, url)| url.to_owned());
+                        let sha = rel
+                            .hashes
+                            .iter()
+                            .find(|(name, _)| name == &asset)
+                            .map(|(_, sha)| sha.to_owned());
                         // i18n: button: download and install the new version, then restart
                         let update = winui::button(ui, at, "Update now", kind, false, None);
-                        if update.clicked()
+                        if (update.clicked()
                             || (enter && idle)
-                            || (idle && std::mem::take(&mut self.press))
+                            || (idle && std::mem::take(&mut self.press)))
+                            && let (Some(url), Some(sha)) = (file, sha)
                         {
                             self.status = None;
                             self.job = Some(crate::update::Job::start(
                                 rt,
                                 ui.ctx(),
                                 install,
-                                rel.assets.clone(),
+                                url,
+                                rel.host.clone(),
                                 asset,
+                                sha,
                             ));
                         }
                     } else if winui::button(ui, at, "Download", ButtonKind::Default, false, None)
@@ -737,7 +858,7 @@ impl About {
         window(
             ctx,
             "about",
-            "About Mister Download Manager",
+            "About Matt Download Manager",
             [420.0, 236.0 + extra],
             false,
             winui::BG(),
@@ -753,7 +874,7 @@ impl About {
                     &p,
                     o.x + 80.0,
                     o.y + 28.0,
-                    crate::i18n::t("Mister Download Manager"),
+                    crate::i18n::t("Matt Download Manager"),
                     ink,
                 );
                 let version = crate::i18n::fmt(
@@ -805,7 +926,7 @@ impl About {
                     "Licenses and credits",
                     "credits",
                 ) {
-                    crate::launch::open(format!("{REPO}/blob/main/ATTRIBUTION.md"));
+                    crate::launch::open(format!("{SITE}/ATTRIBUTION.txt"));
                 }
                 // Its own row under them: the creator's Sponsors page (Help → Support MDM).
                 y += 22.0;
@@ -814,7 +935,7 @@ impl About {
                     &p,
                     o.x + 80.0,
                     y,
-                    "Support MDM on GitHub Sponsors",
+                    "Support Matt Download Manager",
                     "support",
                 ) {
                     support();
@@ -976,7 +1097,7 @@ impl TellFriend {
     fn message() -> String {
         crate::i18n::fmt(
             crate::i18n::t(
-                "I download with Mister Download Manager: fast, free, and it looks like the download manager you already know. {link}",
+                "I download with Matt Download Manager: fast, free, and it looks like the download manager you already know. {link}",
             ),
             &[("link", SITE)],
         )
@@ -1095,7 +1216,7 @@ impl TellFriend {
                             .collect::<String>()
                             .replace('+', "%20")
                     };
-                    let subject = crate::i18n::t("Mister Download Manager");
+                    let subject = crate::i18n::t("Matt Download Manager");
                     let opened = open::that_detached(format!(
                         "mailto:?subject={}&body={}",
                         enc(subject),
@@ -1145,55 +1266,114 @@ mod tests {
         assert!(!newer("0.0.9", "0.1.0"));
     }
 
+    /// 64 hex digits, as the feed names each file's SHA-256.
+    fn sha(c: char) -> String {
+        std::iter::repeat_n(c, 64).collect()
+    }
+
     #[test]
-    fn a_release_is_read_from_github() {
-        let json = r###"{"tag_name":"v0.2.0","published_at":"2026-11-05T10:00:00Z",
-            "html_url":"https://github.com/x/y/releases/tag/v0.2.0","body":"## New\n- Faster",
-            "assets":[{"name":"SHA256SUMS.txt","browser_download_url":"https://x/SHA256SUMS.txt"}]}"###;
+    fn a_release_is_read_from_the_update_feed() {
+        let host = "idm.teachermatt.com";
+        let json = serde_json::json!({
+            "version": "v0.2.0",
+            "date": "2026-11-05",
+            "notes": "https://idm.teachermatt.com/changelog",
+            "notes_text": "## New\n- Faster",
+            "releases": {
+                "x64": {
+                    "setup": "https://idm.teachermatt.com/dl/MattDownloadManager-0.2.0-setup.exe",
+                    "setup_sha256": sha('a'),
+                    "portable": "https://idm.teachermatt.com/dl/MattDownloadManager-0.2.0-portable.zip",
+                    "portable_sha256": sha('b'),
+                    "zip": "https://idm.teachermatt.com/dl/MattDownloadManager-0.2.0-x64.zip",
+                    "zip_sha256": sha('c'),
+                },
+                "arm64": {
+                    "setup": "https://idm.teachermatt.com/dl/MattDownloadManager-0.2.0-setup-arm64.exe",
+                    "setup_sha256": sha('d'),
+                    // Not on the feed's own server: left out.
+                    "portable": "https://github.com/x/y/MattDownloadManager-0.2.0-portable-arm64.zip",
+                    "portable_sha256": sha('e'),
+                },
+                "x86": {
+                    "setup": "https://idm.teachermatt.com/dl/x86-setup.exe",
+                    "setup_sha256": "not-a-hash",
+                },
+            },
+        })
+        .to_string();
+        let setup = "https://idm.teachermatt.com/dl/MattDownloadManager-0.2.0-setup.exe";
         assert_eq!(
-            parse_release(json, "0.1.0").unwrap(),
+            parse_release(&json, host, "0.1.0").unwrap(),
             Found::Newer(Release {
                 version: "0.2.0".into(),
                 date: "2026-11-05".into(),
                 notes: "## New\n- Faster".into(),
-                page: "https://github.com/x/y/releases/tag/v0.2.0".into(),
-                assets: vec![("SHA256SUMS.txt".into(), "https://x/SHA256SUMS.txt".into())],
+                page: "https://idm.teachermatt.com/changelog".into(),
+                assets: vec![
+                    ("MattDownloadManager-0.2.0-setup.exe".into(), setup.into()),
+                    (
+                        "MattDownloadManager-0.2.0-portable.zip".into(),
+                        "https://idm.teachermatt.com/dl/MattDownloadManager-0.2.0-portable.zip"
+                            .into()
+                    ),
+                    (
+                        "MattDownloadManager-0.2.0-x64.zip".into(),
+                        "https://idm.teachermatt.com/dl/MattDownloadManager-0.2.0-x64.zip".into()
+                    ),
+                    (
+                        "MattDownloadManager-0.2.0-setup-arm64.exe".into(),
+                        "https://idm.teachermatt.com/dl/MattDownloadManager-0.2.0-setup-arm64.exe"
+                            .into()
+                    ),
+                ],
+                hashes: vec![
+                    ("MattDownloadManager-0.2.0-setup.exe".into(), sha('a')),
+                    ("MattDownloadManager-0.2.0-portable.zip".into(), sha('b')),
+                    ("MattDownloadManager-0.2.0-x64.zip".into(), sha('c')),
+                    ("MattDownloadManager-0.2.0-setup-arm64.exe".into(), sha('d')),
+                ],
+                host: host.into(),
             })
         );
-        assert_eq!(parse_release(json, "0.2.0").unwrap(), Found::Latest);
-        assert!(parse_release("{}", "0.1.0").is_err());
+        assert_eq!(parse_release(&json, host, "0.2.0").unwrap(), Found::Latest);
+        assert!(parse_release("{}", host, "0.1.0").is_err());
     }
 
-    // #1123: whatever GitHub (or a proxy, or a captive portal) answers, the check fails with a
-    // reason and never panics.
+    // #1123: whatever the feed's server (or a proxy, or a captive portal) answers, the check
+    // fails with a reason and never panics.
     #[test]
     fn a_bad_answer_is_a_failed_check() {
+        let host = "idm.teachermatt.com";
         let bad = [
             // Malformed or cut-off JSON, or not JSON at all.
-            r#"{"tag_name":"v0.6.0","assets":["#,
+            r#"{"version":"0.6.0","releases":["#,
             "",
             "<html><body>Sign in to the Wi-Fi</body></html>",
             // An empty release list, or no release at all.
             "[]",
             "null",
-            r#"{"tag_name":""}"#,
-            r#"{"tag_name":"v"}"#,
+            r#"{"version":""}"#,
+            r#"{"version":"v"}"#,
             // Version strings that don't parse.
-            r#"{"tag_name":"next"}"#,
-            r#"{"tag_name":"v1.x"}"#,
-            r#"{"tag_name":"v١.٢"}"#,
-            r#"{"tag_name":"v0..6"}"#,
-            r#"{"tag_name":"v99999999999999999999999.0"}"#,
-            r#"{"tag_name":"v0.6.-rc"}"#,
-            r#"{"tag_name":42}"#,
+            r#"{"version":"next"}"#,
+            r#"{"version":"v1.x"}"#,
+            r#"{"version":"v١.٢"}"#,
+            r#"{"version":"v0..6"}"#,
+            r#"{"version":"v99999999999999999999999.0"}"#,
+            r#"{"version":"v0.6.-rc"}"#,
+            r#"{"version":42}"#,
         ];
         for json in bad {
-            assert!(parse_release(json, VERSION).is_err(), "{json:?} was taken");
+            assert!(
+                parse_release(json, host, VERSION).is_err(),
+                "{json:?} was taken"
+            );
         }
         // Odd but readable answers still work: a pre-release, missing fields, a short date,
         // and text that isn't ASCII where the date is cut.
-        let odd = r#"{"tag_name":"V9.0.0-rc.1","published_at":"2026-ü","assets":{"x":1}}"#;
-        match parse_release(odd, "0.1.0").unwrap() {
+        let odd = r#"{"version":"V9.0.0-rc.1","date":"2026-ü"}"#;
+        match parse_release(odd, host, "0.1.0").unwrap() {
             Found::Newer(r) => {
                 assert_eq!(r.version, "9.0.0-rc.1");
                 assert_eq!(r.date, "2026-ü");
@@ -1217,7 +1397,7 @@ mod tests {
     }
 
     /// A local server that answers every request with `status` and `body` (a fixture: the
-    /// tests never ask GitHub).
+    /// tests never ask the project's real server).
     async fn feed(status: &'static str, body: &'static str) -> String {
         use tokio::io::{AsyncReadExt, AsyncWriteExt};
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -1234,7 +1414,7 @@ mod tests {
                 let _ = s.shutdown().await;
             }
         });
-        format!("http://{addr}/repos/x/y/releases/latest")
+        format!("http://{addr}/update.json")
     }
 
     #[test]
@@ -1249,28 +1429,25 @@ mod tests {
                 .timeout(Duration::from_secs(10))
                 .build()
                 .unwrap();
-            let newer = feed(
-                "200 OK",
-                r#"{"tag_name":"v9.0.0","published_at":"2026-12-01T00:00:00Z"}"#,
-            )
-            .await;
+            let newer = feed("200 OK", r#"{"version":"9.0.0","date":"2026-12-01"}"#).await;
             assert!(matches!(
-                fetch(&client, &newer, "0.5.2").await,
+                fetch(&client, &newer, "127.0.0.1", "0.5.2").await,
                 Ok(Found::Newer(r)) if r.version == "9.0.0" && r.date == "2026-12-01"
             ));
+            // The feed isn't there (a misconfigured server): the check says it couldn't check.
             let none = feed("404 Not Found", r#"{"message":"Not Found"}"#).await;
-            assert_eq!(fetch(&client, &none, "0.5.2").await, Ok(Found::Latest));
+            assert!(fetch(&client, &none, "127.0.0.1", "0.5.2").await.is_err());
             for (status, body) in [
-                // GitHub's rate limit.
-                ("403 Forbidden", r#"{"message":"API rate limit exceeded"}"#),
+                // The server's rate limit.
+                ("403 Forbidden", r#"{"message":"rate limit exceeded"}"#),
                 ("500 Internal Server Error", ""),
-                ("200 OK", r#"{"tag_name":"v9.0.0","#),
+                ("200 OK", r#"{"version":"9.0.0","#),
                 ("200 OK", "[]"),
-                ("200 OK", r#"{"tag_name":"latest"}"#),
+                ("200 OK", r#"{"version":"latest"}"#),
             ] {
                 let url = feed(status, body).await;
                 assert!(
-                    fetch(&client, &url, "0.5.2").await.is_err(),
+                    fetch(&client, &url, "127.0.0.1", "0.5.2").await.is_err(),
                     "{status} {body}"
                 );
             }
@@ -1279,8 +1456,8 @@ mod tests {
                 let l = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
                 l.local_addr().unwrap()
             };
-            let url = format!("http://{closed}/latest");
-            assert!(fetch(&client, &url, "0.5.2").await.is_err());
+            let url = format!("http://{closed}/update.json");
+            assert!(fetch(&client, &url, "127.0.0.1", "0.5.2").await.is_err());
         });
     }
 
@@ -1353,22 +1530,22 @@ mod tests {
         let at = |doc, lang| page_url(doc, lang);
         assert_eq!(
             at("README.md", "en"),
-            "https://misterdownloadmanager.com/help/"
+            "https://idm.teachermatt.com/help/"
         );
         assert_eq!(
             at("README.md#tutorials", "en"),
-            "https://misterdownloadmanager.com/help/#tutorials"
+            "https://idm.teachermatt.com/help/#tutorials"
         );
         assert_eq!(
             at("video.md", "de"),
-            "https://misterdownloadmanager.com/de/help/video.html"
+            "https://idm.teachermatt.com/de/help/video.html"
         );
         assert_eq!(
             at("queues-and-scheduler.md#the-scheduler-window", "ar"),
-            "https://misterdownloadmanager.com/ar/help/queues-and-scheduler.html#the-scheduler-window"
+            "https://idm.teachermatt.com/ar/help/queues-and-scheduler.html#the-scheduler-window"
         );
-        assert_eq!(at("", "fr"), "https://misterdownloadmanager.com/fr/");
-        assert_eq!(at("", "en"), "https://misterdownloadmanager.com/");
+        assert_eq!(at("", "fr"), "https://idm.teachermatt.com/fr/");
+        assert_eq!(at("", "en"), "https://idm.teachermatt.com/");
         // The site's folders: its own codes, a region read as its language, else English.
         for (lang, folder) in [
             ("pt-br", "/pt-br"),
@@ -1384,7 +1561,7 @@ mod tests {
         ] {
             assert_eq!(
                 at("options.md", lang),
-                format!("https://misterdownloadmanager.com{folder}/help/options.html"),
+                format!("https://idm.teachermatt.com{folder}/help/options.html"),
                 "{lang}"
             );
         }
@@ -1422,7 +1599,7 @@ mod tests {
         }
         let calls = regex::Regex::new(r#"(?:open_page|HelpPage)\(\s*"([^"]+)""#).unwrap();
         let site =
-            regex::Regex::new(r"https://misterdownloadmanager\.com/help/([\w.-]*)(#[\w-]+)?")
+            regex::Regex::new(r"https://mattdownloadmanager\.com/help/([\w.-]*)(#[\w-]+)?")
                 .unwrap();
         let mut files = vec![];
         let mut dirs = vec![root().join("crates"), root().join("extension")];

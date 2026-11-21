@@ -1,12 +1,12 @@
 {
   "name": {
-    "message": "Mister Download Manager"
+    "message": "Matt Download Manager"
   },
   "description": {
-    "message": "İndirmeleri tarayıcıdan Mister Download Manager uygulamasına aktarır."
+    "message": "İndirmeleri tarayıcıdan Matt Download Manager uygulamasına aktarır."
   },
   "menu": {
-    "message": "Mister Download Manager ile İndir"
+    "message": "Matt Download Manager ile İndir"
   },
   "video_download": {
     "message": "Videoyu indir"
@@ -30,19 +30,19 @@
     "message": "Düğme ayarları..."
   },
   "video_sent": {
-    "message": "Mister Download Manager uygulamasına gönderildi"
+    "message": "Matt Download Manager uygulamasına gönderildi"
   },
   "menu_selected": {
-    "message": "Seçili bağlantıları Mister Download Manager ile indir"
+    "message": "Seçili bağlantıları Matt Download Manager ile indir"
   },
   "menu_all": {
-    "message": "Tüm bağlantıları Mister Download Manager ile indir"
+    "message": "Tüm bağlantıları Matt Download Manager ile indir"
   },
   "status_connected": {
-    "message": "Mister Download Manager uygulamasına bağlandı"
+    "message": "Matt Download Manager uygulamasına bağlandı"
   },
   "status_connected_version": {
-    "message": "Mister Download Manager $version$ uygulamasına bağlandı",
+    "message": "Matt Download Manager $version$ uygulamasına bağlandı",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -54,22 +54,22 @@
     "message": "Duraklatıldı: indirmeler tarayıcıda kalır"
   },
   "status_not_installed": {
-    "message": "Mister Download Manager yüklü değil veya tarayıcı entegrasyonu ayarlanmadı"
+    "message": "Matt Download Manager yüklü değil veya tarayıcı entegrasyonu ayarlanmadı"
   },
   "status_forbidden": {
-    "message": "Mister Download Manager uzantının bu kopyasını kabul etmiyor"
+    "message": "Matt Download Manager uzantının bu kopyasını kabul etmiyor"
   },
   "status_not_running": {
-    "message": "Mister Download Manager zamanında başlatılamadı"
+    "message": "Matt Download Manager zamanında başlatılamadı"
   },
   "status_host_failed": {
-    "message": "Mister Download Manager ile bağlantı kurulamadı"
+    "message": "Matt Download Manager ile bağlantı kurulamadı"
   },
   "status_too_large": {
     "message": "Bu indirmenin ayrıntıları aktarılamayacak kadar büyüktü"
   },
   "status_update_app": {
-    "message": "Bu uzantının sunduğu tüm özellikleri kullanmak için Mister Download Manager uygulamasını güncelle"
+    "message": "Bu uzantının sunduğu tüm özellikleri kullanmak için Matt Download Manager uygulamasını güncelle"
   },
   "popup_take": {
     "message": "İndirmeleri bu tarayıcıdan al"
@@ -78,10 +78,10 @@
     "message": "İndirmeleri bu tarayıcının proxy veya VPN uzantısı üzerinden gönder"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager daha sonra bu tarayıcıyla aynı proxy üzerinden indirme yapar. Tarayıcı bir kez izin vermenizi ister; bu seçeneği kapatmak verilen izni geri alır."
+    "message": "Matt Download Manager daha sonra bu tarayıcıyla aynı proxy üzerinden indirme yapar. Tarayıcı bir kez izin vermenizi ister; bu seçeneği kapatmak verilen izni geri alır."
   },
   "popup_proxy_title_chromium": {
-    "message": "Bu özellik açıkken Mister Download Manager, bu tarayıcıyla aynı proxy üzerinden indirme yapar. Kapalıyken uzantı, tarayıcının proxy ayarlarını okumaz."
+    "message": "Bu özellik açıkken Matt Download Manager, bu tarayıcıyla aynı proxy üzerinden indirme yapar. Kapalıyken uzantı, tarayıcının proxy ayarlarını okumaz."
   },
   "popup_exclude_site": {
     "message": "$site$ sitesindeki indirmeleri artık alma",
@@ -105,7 +105,7 @@
     }
   },
   "popup_open": {
-    "message": "Mister Download Manager uygulamasını aç"
+    "message": "Matt Download Manager uygulamasını aç"
   },
   "popup_options": {
     "message": "Seçenekler..."
@@ -150,7 +150,7 @@
     "message": "Gelişmiş tarayıcı entegrasyonunu kullan seçeneği, Seçenekler → Genel bölümünde kapalı."
   },
   "declined_torrents": {
-    "message": "Bu bir torrent ve Torrent ayarlarında Mister Download Manager ile mıknatıs bağlantılarını ve .torrent dosyalarını aç seçeneği kapalı."
+    "message": "Bu bir torrent ve Torrent ayarlarında Matt Download Manager ile mıknatıs bağlantılarını ve .torrent dosyalarını aç seçeneği kapalı."
   },
   "declined_site_access": {
     "message": "Uzantının bu siteyi okumasına izin verilmiyor (tarayıcının site erişimi)."
@@ -195,16 +195,16 @@
     "message": "Burada indirilecek video yok"
   },
   "video_playlist": {
-    "message": "Bir video listesi: videoları Mister Download Manager uygulamasında seçin"
+    "message": "Bir video listesi: videoları Matt Download Manager uygulamasında seçin"
   },
   "video_no_ytdlp": {
-    "message": "Mister Download Manager uygulamasının bu video için yt-dlp'ye ihtiyacı var"
+    "message": "Matt Download Manager uygulamasının bu video için yt-dlp'ye ihtiyacı var"
   },
   "video_too_long": {
     "message": "Arama çok uzun sürdü"
   },
   "video_busy": {
-    "message": "Mister Download Manager diğer videolarla meşgul"
+    "message": "Matt Download Manager diğer videolarla meşgul"
   },
   "video_queued": {
     "message": "Sıraya eklendi"
@@ -228,7 +228,7 @@
     "message": "Bu bilgisayar"
   },
   "popup_send_remote": {
-    "message": "Başka bir Mister Download Manager (bir sunucu)"
+    "message": "Başka bir Matt Download Manager (bir sunucu)"
   },
   "popup_remote_code": {
     "message": "Eşleme kodu"
@@ -240,7 +240,7 @@
     "message": "Eşle"
   },
   "popup_remote_help": {
-    "message": "Adresini bir kez açın ve sertifikasını kabul edin, sonra Seçenekler, Uzak, Bir cihazı eşle'den (veya misterdownloadmanager-cli pair) bir kod girin."
+    "message": "Adresini bir kez açın ve sertifikasını kabul edin, sonra Seçenekler, Uzak, Bir cihazı eşle'den (veya mattdownloadmanager-cli pair) bir kod girin."
   },
   "status_remote": {
     "message": "İndirmeler $address$ adresine gidiyor",
@@ -324,7 +324,7 @@
     "message": "Tüm kaliteler ve altyazılar..."
   },
   "video_failed": {
-    "message": "Mister Download Manager yüklü değil veya başlatılamadı"
+    "message": "Matt Download Manager yüklü değil veya başlatılamadı"
   },
   "video_download_best": {
     "message": "En iyi kaliteyi indir"

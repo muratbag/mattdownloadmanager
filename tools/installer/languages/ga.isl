@@ -1,4 +1,4 @@
-﻿; Mister Download Manager's installer in Irish: tools/installer/languages.py
+﻿; Matt Download Manager's installer in Irish: tools/installer/languages.py
 ; (machine-translated; a native speaker may correct any line).
 
 [LangOptions]
@@ -291,8 +291,8 @@ ShutdownBlockReasonUninstallingApp=Ag díshuiteáil %1.
 
 [CustomMessages]
 TaskBrowser=Cumasaigh comhtháthú &brabhsálaí (Chrome, Edge, Brave, Firefox)
-TaskTorrents=Oscail comhaid .&torrent agus naisc mhaighnéadacha le Mister Download Manager
-TaskStartup=Tosaigh Mister Download Manager nuair a thosaíonn &Windows
+TaskTorrents=Oscail comhaid .&torrent agus naisc mhaighnéadacha le Matt Download Manager
+TaskStartup=Tosaigh Matt Download Manager nuair a thosaíonn &Windows
 TaskGroupOther=Eile:
-Launch=Tosaigh Mister Download Manager
+Launch=Tosaigh Matt Download Manager
 KeepData=Scrios do liosta íoslódálacha agus socruithe freisin?%n%nNí dhéantar teagmháil le do chuid comhad íoslódáilte ar aon nós.

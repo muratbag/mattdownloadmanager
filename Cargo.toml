@@ -3,7 +3,7 @@ resolver = "3"
 members = ["crates/*"]
 
 [workspace.package]
-version = "0.5.2"
+version = "1.0.9"
 edition = "2024"
 rust-version = "1.98"
 license = "GPL-3.0-or-later"
@@ -99,7 +99,7 @@ crc32fast = "1.5.3"
 # Free space and file system per volume (disk preflight); only the disk part.
 sysinfo = { version = "0.40.0", default-features = false, features = ["disk"] }
 proptest = "1.12.0"
-# HTTP/1.1 only: each engine worker must be one real TCP connection (notes/ENGINE.md §4).
+# HTTP/1.1 only: each engine worker must be one real TCP connection (notes/ENGINE.md 搂4).
 # The browser-like connection (#668, crates/engine/src/browserlike.rs): a download whose site's
 # bot check refused MDM's own connection is asked once more the way a browser connects (its TLS
 # handshake, HTTP/2 settings and header order), on BoringSSL. Builds BoringSSL from source:
@@ -264,3 +264,4 @@ wgpu-core-deps-windows-linux-android = { git = "https://github.com/anefzaoui/wgp
 wgpu-hal = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }
 wgpu-naga-bridge = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }
 wgpu-types = { git = "https://github.com/anefzaoui/wgpu.git", rev = "1c6f336e239ff7bc46b4dec194f1d96d3d4f8e04" }
+

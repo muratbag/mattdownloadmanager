@@ -45,6 +45,7 @@ Each release's notes on GitHub come from its section here (`## [X.Y.Z]`, see
 
 ### Fixed
 
+- **A video's sound plays in Windows' players:** a quality merged from a site's separate picture and sound (YouTube's 1080p and above) was written into an MP4 even when its sound was Opus, which an MP4 doesn't hold: the picture played and the sound was silent in Windows' Media Player, Films & TV and other players. A merged quality now takes a sound an MP4 holds (AAC in M4A) when the page has one, and its file is an MKV when it doesn't (Opus plays there); yt-dlp is told `--merge-output-format mp4/mkv`, and the quality list says MP4 or MKV as the file will be.
 - Download video: a malformed stream playlist could stop the video downloader; such a download now fails with a message saying what was wrong with its playlist (thanks to [@riyazalsodie](https://github.com/riyazalsodie)).
 - **Exit Mister Download Manager when done** quits MDM. A queue whose Scheduler has it ticked, or a download whose progress window's **Options on completion** says to, only hid MDM in the notification area while **Options → General → Keep running when closing the window** was on, as it is by default: its exit was taken for a click on the window's close button. It now quits as **File → Exit** does, whether the window shows or is hidden in the notification area, with the list and settings saved; closing the window yourself still keeps MDM running as that option says.
 - The browser's **Download video** button over a video in a feed, or on a site yt-dlp can't read (Douyin's recommended videos, which IDM downloads), no longer says the page has no video while the browser plays it: when MDM finds nothing on the page or in the post around the video, the button offers what the tab played for that very video, a file or a stream (a stream with its qualities), and MDM downloads it as any video, with the page as its Referer and your browser's cookies. The video is told apart from the feed's next one by its length, which the file's own header says; when more than one of what played could be it, the button says it can't tell which video this is rather than guess. A video Douyin plays as a picture and a sound apart isn't offered yet. On Douyin the button also names the post (its `/video/` address), so a yt-dlp that can read it looks it up first ([#1092](https://github.com/anefzaoui/misterdownloadmanager/issues/1092)).
@@ -206,6 +207,30 @@ Each release's notes on GitHub come from its section here (`## [X.Y.Z]`, see
 - Windows: **Open folder** on a download opens the folder with the file manager set up to open folders (Directory Opus, for example), instead of always starting Windows Explorer. With Explorer it still selects the file ([#446](https://github.com/anefzaoui/misterdownloadmanager/issues/446)).
 - Left click on the tray icon now toggles the main window: hidden or minimized shows it again, in front hides it to the tray, and behind other windows brings it forward (it only ever showed it, so clicking while the window was visible did nothing). On Windows it goes by what covers the window, so it works with the icon under the taskbar's ^ too.
 - A download started in the browser (a video's download button, a link, a magnet or .torrent) now opens only its dialog when the main window is hidden or minimized, instead of always bringing the full window up.
+
+
+## [1.0.3] - 2026-11-16
+
+The Download video list is now just the heights and MP3, and MP3 downloads are fixed.
+
+### Changed
+
+- **The video qualities are MP4 heights and MP3 only:** the Download video window (and the button's menu over a video) lists one line for each height a page offers — 360p, 480p, 720p, 1080p, 1440p (2K), 2160p (4K), and any other the page has — saved as an MP4 with AAC (MKV only for a height the page has in no MP4 codec), then the MP3s (VBR, 320, 256, 192 and 128 kbps). The site's WebM variants, the separate AV1/VP9/H.264 duplicates, the "original sound" files, and the Opus and FLAC conversions are no longer listed. Playlist downloads have the same list.
+
+### Fixed
+
+- **MP3 downloads:** the conversion ran on a stream MDM's engine had downloaded, and in the field it saved a half-length MP3 that would not play while the download said Complete (leaving the stream behind). yt-dlp now downloads and converts the sound in one run, the saved file is checked to be a non-empty MP3, the stream it converted from is removed, and a conversion that fails says so instead of completing.
+
+
+## [1.0.2] - 2026-11-16
+
+A fix release: a video downloaded from a site that serves its picture and its sound apart
+(YouTube's 1080p and above) no longer comes out silent in Windows' players.
+
+### Fixed
+
+- **A video's sound plays in Windows' players:** a quality merged from a site's separate picture and sound was written into an MP4 even when its sound was Opus, which an MP4 doesn't hold: the picture played and the sound was silent in Windows' Media Player, Films & TV and other players. A merged quality now takes a sound an MP4 holds (AAC in M4A) when the page has one, and its file is an MKV when it doesn't (Opus plays there); yt-dlp is told `--merge-output-format mp4/mkv`, and the quality list says MP4 or MKV as the file will be. Playlist downloads prefer the same sound.
+- Download video: a malformed stream playlist could stop the video downloader; such a download now fails with a message saying what was wrong with its playlist (thanks to [@riyazalsodie](https://github.com/riyazalsodie)).
 
 
 ## [0.5.2] - 2026-11-09

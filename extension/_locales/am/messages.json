@@ -1,12 +1,12 @@
 {
   "name": {
-    "message": "Mister Download Manager"
+    "message": "Matt Download Manager"
   },
   "description": {
-    "message": "ማውረዶችን ከብሮውዘር ወደ Mister Download Manager ያስተላልፋል።"
+    "message": "ማውረዶችን ከብሮውዘር ወደ Matt Download Manager ያስተላልፋል።"
   },
   "menu": {
-    "message": "በMister Download Manager ያውርዱ"
+    "message": "በMatt Download Manager ያውርዱ"
   },
   "video_download": {
     "message": "ቪዲዮ አውርድ"
@@ -30,19 +30,19 @@
     "message": "የአዝራር ቅንብሮች..."
   },
   "video_sent": {
-    "message": "ወደ Mister Download Manager ተልኳል"
+    "message": "ወደ Matt Download Manager ተልኳል"
   },
   "menu_selected": {
-    "message": "የተመረጡ አገናኞችን በMister Download Manager ያውርዱ"
+    "message": "የተመረጡ አገናኞችን በMatt Download Manager ያውርዱ"
   },
   "menu_all": {
-    "message": "ሁሉንም አገናኞች በMister Download Manager ያውርዱ"
+    "message": "ሁሉንም አገናኞች በMatt Download Manager ያውርዱ"
   },
   "status_connected": {
-    "message": "ከMister Download Manager ጋር ተገናኝቷል"
+    "message": "ከMatt Download Manager ጋር ተገናኝቷል"
   },
   "status_connected_version": {
-    "message": "ከMister Download Manager $version$ ጋር ተገናኝቷል",
+    "message": "ከMatt Download Manager $version$ ጋር ተገናኝቷል",
     "placeholders": {
       "version": {
         "content": "$1",
@@ -54,22 +54,22 @@
     "message": "ባለበት ቆሟል፦ ውርዶች በአሳሹ ይቀራሉ"
   },
   "status_not_installed": {
-    "message": "Mister Download Manager አልተጫነም፣ ወይም የአሳሽ ውህደቱ አልተዘጋጀም"
+    "message": "Matt Download Manager አልተጫነም፣ ወይም የአሳሽ ውህደቱ አልተዘጋጀም"
   },
   "status_forbidden": {
-    "message": "Mister Download Manager የዚህን ቅጥያ ቅጂ አይቀበልም"
+    "message": "Matt Download Manager የዚህን ቅጥያ ቅጂ አይቀበልም"
   },
   "status_not_running": {
-    "message": "Mister Download Manager በጊዜ አልጀመረም"
+    "message": "Matt Download Manager በጊዜ አልጀመረም"
   },
   "status_host_failed": {
-    "message": "ከMister Download Manager ጋር ያለው ግንኙነት አልተሳካም"
+    "message": "ከMatt Download Manager ጋር ያለው ግንኙነት አልተሳካም"
   },
   "status_too_large": {
     "message": "የዚህ ውርድ ዝርዝሮች ለማስተላለፍ በጣም ትልቅ ነበሩ"
   },
   "status_update_app": {
-    "message": "ይህ ቅጥያ የሚያቀርበውን ሁሉ ለመጠቀም Mister Download Managerን ያዘምኑ"
+    "message": "ይህ ቅጥያ የሚያቀርበውን ሁሉ ለመጠቀም Matt Download Managerን ያዘምኑ"
   },
   "popup_take": {
     "message": "ውርዶችን ከዚህ አሳሽ ይውሰዱ"
@@ -78,10 +78,10 @@
     "message": "ውርዶችን በዚህ አሳሽ ፕሮክሲ ወይም ቪፒኤን ቅጥያ በኩል ይላኩ"
   },
   "popup_proxy_title": {
-    "message": "Mister Download Manager ከዚያ በዚህ አሳሽ ከሚጠቀምበት ፕሮክሲ በኩል ያወርዳል። አሳሹ አንድ ጊዜ እንዲፈቅዱ ይጠይቅዎታል፤ ይህን ማጥፋት ፈቃዱን ይሽራል።"
+    "message": "Matt Download Manager ከዚያ በዚህ አሳሽ ከሚጠቀምበት ፕሮክሲ በኩል ያወርዳል። አሳሹ አንድ ጊዜ እንዲፈቅዱ ይጠይቅዎታል፤ ይህን ማጥፋት ፈቃዱን ይሽራል።"
   },
   "popup_proxy_title_chromium": {
-    "message": "Mister Download Manager ከዚያም በዚህ አሳሽ በኩል በተመሳሳይ ፕሮክሲ ያወርዳል። ይህ ሲጠፋ፣ ቅጥያው የአሳሹን ፕሮክሲ አያነብም።"
+    "message": "Matt Download Manager ከዚያም በዚህ አሳሽ በኩል በተመሳሳይ ፕሮክሲ ያወርዳል። ይህ ሲጠፋ፣ ቅጥያው የአሳሹን ፕሮክሲ አያነብም።"
   },
   "popup_exclude_site": {
     "message": "ከ$site$ የሚመጡ ውርዶችን ዳግም አትውሰዱ",
@@ -105,7 +105,7 @@
     }
   },
   "popup_open": {
-    "message": "Mister Download Managerን ይክፈቱ"
+    "message": "Matt Download Managerን ይክፈቱ"
   },
   "popup_options": {
     "message": "አማራጮች..."
@@ -150,7 +150,7 @@
     "message": "የላቀ የአሳሽ ውህደትን ተጠቀም በአማራጮች → አጠቃላይ ውስጥ ጠፍቷል።"
   },
   "declined_torrents": {
-    "message": "ቶረንት ነው፣ እና በቶረንት ቅንብሮች ውስጥ Open magnet links and .torrent files with Mister Download Manager ተሰናክሏል።"
+    "message": "ቶረንት ነው፣ እና በቶረንት ቅንብሮች ውስጥ Open magnet links and .torrent files with Matt Download Manager ተሰናክሏል።"
   },
   "declined_site_access": {
     "message": "ቅጥያው ይህንን ጣቢያ ለማንበብ አልተፈቀደለትም (የአሳሹ የጣቢያ መዳረሻ)።"
@@ -195,16 +195,16 @@
     "message": "እዚህ የሚወርድ ቪዲዮ የለም"
   },
   "video_playlist": {
-    "message": "የቪዲዮዎች ዝርዝር፦ በMister Download Manager ውስጥ ይምረጧቸው"
+    "message": "የቪዲዮዎች ዝርዝር፦ በMatt Download Manager ውስጥ ይምረጧቸው"
   },
   "video_no_ytdlp": {
-    "message": "Mister Download Manager ለዚህ ቪዲዮ yt-dlp ይፈልጋል"
+    "message": "Matt Download Manager ለዚህ ቪዲዮ yt-dlp ይፈልጋል"
   },
   "video_too_long": {
     "message": "መፈለጉ በጣም ረጅም ጊዜ ወሰደ"
   },
   "video_busy": {
-    "message": "Mister Download Manager በሌሎች ቪዲዮዎች ተጠምዷል"
+    "message": "Matt Download Manager በሌሎች ቪዲዮዎች ተጠምዷል"
   },
   "video_queued": {
     "message": "ወደ ወረፋው ታክሏል"
@@ -228,7 +228,7 @@
     "message": "ይህ ኮምፒውተር"
   },
   "popup_send_remote": {
-    "message": "ሌላ Mister Download Manager (አገልጋይ)"
+    "message": "ሌላ Matt Download Manager (አገልጋይ)"
   },
   "popup_remote_code": {
     "message": "የማጣመሪያ ኮድ"
@@ -240,7 +240,7 @@
     "message": "ያጣምሩ"
   },
   "popup_remote_help": {
-    "message": "አድራሻውን አንድ ጊዜ ይክፈቱ እና የምስክር ወረቀቱን ይቀበሉ፣ ከዚያ ከ Options, Remote, Pair a device (ወይም misterdownloadmanager-cli pair) ኮድ ያስገቡ።"
+    "message": "አድራሻውን አንድ ጊዜ ይክፈቱ እና የምስክር ወረቀቱን ይቀበሉ፣ ከዚያ ከ Options, Remote, Pair a device (ወይም mattdownloadmanager-cli pair) ኮድ ያስገቡ።"
   },
   "status_remote": {
     "message": "ውርዶች ወደ $address$ ይሄዳሉ",
@@ -324,7 +324,7 @@
     "message": "ሁሉም ጥራቶች እና የትርጉም ጽሑፎች..."
   },
   "video_failed": {
-    "message": "Mister Download Manager አልተጫነም ወይም አልጀመረም"
+    "message": "Matt Download Manager አልተጫነም ወይም አልጀመረም"
   },
   "video_download_best": {
     "message": "ምርጡን አውርድ"

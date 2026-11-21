@@ -127,7 +127,7 @@ impl Extension {
             ctx,
             "extension",
             // i18n: title of the window that offers the browser extension
-            "Add Mister Download Manager to your browser",
+            "Add Matt Download Manager to your browser",
             [W, h + extra],
             false,
             winui::BG(),
@@ -275,7 +275,7 @@ impl Extension {
                 o.x + 18.0,
                 o.y + y,
                 crate::i18n::t(
-                    "Browser integration isn't set up on this computer, so no browser can reach Mister Download Manager yet.",
+                    "Browser integration isn't set up on this computer, so no browser can reach Matt Download Manager yet.",
                 ),
                 winui::ERROR(),
                 o.x + fix_x - 10.0,
@@ -495,7 +495,7 @@ const STEPS: [&str; 8] = [
     // i18n: step 7 of turning on the Safari extension; the quoted tab name is what Safari's settings show in this language: use Apple's own word for it, or keep the English name when unsure
     "Switch to the \"Extensions\" tab (the puzzle piece).",
     // i18n: step 8 of turning on the Safari extension
-    "Turn on \"Mister Download Manager\" and allow it on all websites.",
+    "Turn on \"Matt Download Manager\" and allow it on all websites.",
 ];
 
 /// The browsers whose extension reached the app, by Options' names.
@@ -630,7 +630,17 @@ pub fn repair_at_start() {
         return;
     }
     #[cfg(windows)]
-    crate::win32::repair_browsers();
+    {
+        // The setup registers the native host for this user. A copy the setup never ran for (a
+        // plain zip, or its box unticked) registers at its first start, so browser capture works
+        // without an administrator; a registration that works, or one that leads nowhere, is
+        // left to [`crate::win32::repair_browsers`].
+        if registration() == Registration::Missing {
+            crate::win32::register_browsers_at_start();
+        } else {
+            crate::win32::repair_browsers();
+        }
+    }
     #[cfg(unix)]
     crate::unix::register_browsers();
 }
@@ -664,7 +674,7 @@ pub fn set_up(ctx: &egui::Context) {
                     .map_err(|e| e.to_string())
                     .and_then(|exe| {
                         run_host(
-                            &exe.with_file_name("misterdownloadmanager-nmhost.exe"),
+                            &exe.with_file_name("mattdownloadmanager-nmhost.exe"),
                             "--register",
                             SET_UP_LIMIT,
                         )
@@ -732,7 +742,7 @@ pub fn checks(settings: &crate::settings::Settings) -> Vec<Check> {
         Registration::Ready | Registration::Missing => check(
             registration == Registration::Ready,
             // i18n: a check of Test browser integration: the browsers find MDM's helper program
-            "The browsers can find Mister Download Manager",
+            "The browsers can find Matt Download Manager",
             Some("not-installed"),
         ),
         Registration::NoBrowser => check(
@@ -745,7 +755,7 @@ pub fn checks(settings: &crate::settings::Settings) -> Vec<Check> {
             tracing::warn!("browser integration: {} is missing", path.display());
             check(
                 false,
-                // i18n: a check of Test browser integration: the browsers are set up, but the small helper program they start (misterdownloadmanager-nmhost) is gone
+                // i18n: a check of Test browser integration: the browsers are set up, but the small helper program they start (mattdownloadmanager-nmhost) is gone
                 "The helper program the browsers start is missing",
                 Some("not-installed"),
             )
