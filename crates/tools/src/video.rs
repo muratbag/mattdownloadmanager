@@ -3028,11 +3028,11 @@ mod tests {
             {"format_id": "18", "ext": "mp4", "height": 360, "vcodec": "avc1", "acodec": "mp4a", "tbr": 500}]}"#;
         let page = PAGE.as_bytes();
         let label = "360p · H.264";
-        assert!(offered(page, "18/b[height=360]", label, false).is_some());
+        assert!(offered(page, "18/b[height=360]/b", label, false).is_some());
         assert!(offered(page, "18/b[height=720]", "720p · H.264", false).is_none());
         assert!(offered(page, "18/b[height=360]", "360p · WEBM · H.264", false).is_none());
         assert!(offered(page, "18/b[height=360]", label, true).is_none());
-        assert!(offered(page, "18/bv*[height=360]+ba/b[height=360]", label, true).is_some());
+        assert!(offered(page, "18/bv*[height=360]+ba/b[height=360]/b", "360p", true).is_some());
         assert!(offered(b"not json", "b", "b", false).is_none());
 
         let slot = InfoSlot::new(Instant::now());

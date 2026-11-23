@@ -982,7 +982,15 @@ fn videos(v: &Video, can_merge: bool, sounds: &[&Format]) -> Vec<Choice> {
                 f.approx || exact.is_none() || sound.is_some_and(|a| a.approx || a.size.is_none());
             Choice {
                 label: video_label(h, &ext, l.codec, l.fps, range),
-                selector: exact.map_or_else(|| near.clone(), |e| format!("{e}/{near}")),
+                // `/b` last (#1.0.11): a network that hides the chosen quality by the time the
+                // streams are asked for (a VPN's datacenter address, a site's format list that
+                // changed between the look-up and the download) made yt-dlp answer "Requested
+                // format is not available" and the whole download failed. `b` is yt-dlp's own
+                // best, so the file still comes — the log says which quality it was.
+                selector: {
+                    let near = format!("{near}/b");
+                    exact.map_or_else(|| near.clone(), |e| format!("{e}/{near}"))
+                },
                 ext,
                 size,
                 approx,
@@ -1196,7 +1204,7 @@ mod tests {
         assert_eq!(c[0].label, "3840p");
         assert_eq!(
             c[0].selector,
-            "401+140/bv*[height=3840]+ba[ext=m4a]/bv*[height=3840]+ba/b[height=3840]"
+            "401+140/bv*[height=3840]+ba[ext=m4a]/bv*[height=3840]+ba/b[height=3840]/b"
         );
         assert_eq!(c[0].size, Some(555_978_141 + 2_934_637));
         assert!(!c[0].approx);
@@ -1204,7 +1212,7 @@ mod tests {
         assert_eq!(c[1].label, "2560p");
         assert_eq!(
             c[1].selector,
-            "400+140/bv*[height=2560]+ba[ext=m4a]/bv*[height=2560]+ba/b[height=2560]"
+            "400+140/bv*[height=2560]+ba[ext=m4a]/bv*[height=2560]+ba/b[height=2560]/b"
         );
         let videos: Vec<&Choice> = c.iter().filter(|c| c.height.is_some()).collect();
         assert_eq!(videos.len(), 8);
@@ -1243,15 +1251,15 @@ mod tests {
             [
                 (
                     "2160p (4K)",
-                    "701+140/bv*[height=2160]+ba[ext=m4a]/bv*[height=2160]+ba/b[height=2160]"
+                    "701+140/bv*[height=2160]+ba[ext=m4a]/bv*[height=2160]+ba/b[height=2160]/b"
                 ),
                 (
                     "1440p (2K)",
-                    "700+140/bv*[height=1440]+ba[ext=m4a]/bv*[height=1440]+ba/b[height=1440]"
+                    "700+140/bv*[height=1440]+ba[ext=m4a]/bv*[height=1440]+ba/b[height=1440]/b"
                 ),
                 (
                     "1080p",
-                    "299+140/bv*[height=1080]+ba[ext=m4a]/bv*[height=1080]+ba/b[height=1080]"
+                    "299+140/bv*[height=1080]+ba[ext=m4a]/bv*[height=1080]+ba/b[height=1080]/b"
                 ),
             ]
         );
@@ -1321,7 +1329,7 @@ mod tests {
         // The sound an MP4 holds leads the nearest: the look-up can't land on Opus again.
         assert_eq!(
             c[0].selector,
-            "bv*[height=720]+ba[ext=m4a]/bv*[height=720]+ba/b[height=720]"
+            "bv*[height=720]+ba[ext=m4a]/bv*[height=720]+ba/b[height=720]/b"
         );
         assert!(c[0].approx);
     }
@@ -1340,7 +1348,7 @@ mod tests {
         assert_eq!(c[0].label, "1080p");
         assert_eq!(
             c[0].selector,
-            "299+140/bv*[height=1080]+ba[ext=m4a]/bv*[height=1080]+ba/b[height=1080]"
+            "299+140/bv*[height=1080]+ba[ext=m4a]/bv*[height=1080]+ba/b[height=1080]/b"
         );
         assert_eq!(c[0].ext, "mp4");
         assert_eq!(c[0].size, Some(130));
@@ -1352,7 +1360,7 @@ mod tests {
         assert_eq!(c[0].label, "1080p · MKV");
         assert_eq!(
             c[0].selector,
-            "299+774/bv*[height=1080]+ba/b[height=1080]"
+            "299+774/bv*[height=1080]+ba/b[height=1080]/b"
         );
         assert_eq!(c[0].ext, "mkv");
         // A VP9 picture and an AAC sound still don't go into one MP4: an MKV.
@@ -1538,7 +1546,7 @@ mod tests {
         let plain = choices(&v, false);
         let labels: Vec<&str> = plain.iter().map(|c| c.label.as_str()).collect();
         assert_eq!(labels, ["360p · H.264", "Audio only original M4A"]);
-        assert_eq!(plain[0].selector, "18/b[height=360]");
+        assert_eq!(plain[0].selector, "18/b[height=360]/b");
     }
 
     /// Live (#352): `MDM_LIVE_YTDLP=<yt-dlp> MDM_LIVE_PAGE=<video page> cargo test -p mdm-tools
@@ -1699,12 +1707,12 @@ mod tests {
         assert_eq!(with[0].size, None);
         assert_eq!(without_remuxing("ba"), "ba[protocol!*=m3u8]/ba");
         assert_eq!(
-            without_remuxing("b[height=360]"),
-            "b[height=360][protocol!*=m3u8]/b[height=360]"
+            without_remuxing("b[height=360]/b"),
+            "b[height=360][protocol!*=m3u8]/b[height=360]/b[protocol!*=m3u8]/b"
         );
         assert_eq!(
-            without_remuxing("bv*[height=720]+ba/b[height=720]"),
-            "bv*[height=720]+ba/b[height=720][protocol!*=m3u8]/b[height=720]"
+            without_remuxing("bv*[height=720]+ba/b[height=720]/b"),
+            "bv*[height=720]+ba/b[height=720][protocol!*=m3u8]/b[height=720]/b[protocol!*=m3u8]/b"
         );
         // A format by its ID, and one already choosing its way, as they are.
         assert_eq!(without_remuxing("hls-1280"), "hls-1280");
@@ -1725,7 +1733,7 @@ mod tests {
         assert_eq!(c(OPUS), Some(("opus", None)));
         assert_eq!(c(FLAC), Some(("flac", None)));
         assert_eq!(c("ba"), None);
-        assert_eq!(c("bv*[height=720]+ba/b[height=720]"), None);
+        assert_eq!(c("bv*[height=720]+ba/b[height=720]/b"), None);
         assert_eq!(c("opus:x"), None);
         let flac = Choice {
             label: "x".into(),
@@ -1751,7 +1759,7 @@ mod tests {
             "mp3: 192",
             "MP3:192",
             "ba",
-            "b[height=360]",
+            "b[height=360]/b",
         ] {
             assert_eq!(mp3_quality(other), None, "{other}");
         }

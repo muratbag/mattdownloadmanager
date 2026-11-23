@@ -855,7 +855,7 @@ fn preloaded_checks(me: &Path) {
         let job = VideoJob::start_with(
             &exe,
             "https://video.example/talk",
-            "18/b[height=360]",
+            "18/b[height=360]/b",
             out.path(),
             "Talk",
             None,
@@ -892,7 +892,7 @@ fn preloaded_checks(me: &Path) {
         }
         Some(Preloaded {
             slot,
-            selector: "18/b[height=360]".into(),
+            selector: "18/b[height=360]/b".into(),
             label: label.into(),
             merge: false,
         })

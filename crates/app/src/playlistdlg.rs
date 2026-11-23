@@ -76,9 +76,10 @@ fn picks(merge: bool) -> Vec<Pick> {
                 &[("height", &h.to_string())],
             ),
             selector: if merge {
-                format!("bv*[height<={h}]+ba[ext=m4a]/bv*[height<={h}]+ba/b[height<={h}]")
+                // `/b` last (#1.0.11): never fail a video whose quality the network hid.
+                format!("bv*[height<={h}]+ba[ext=m4a]/bv*[height<={h}]+ba/b[height<={h}]/b")
             } else {
-                format!("b[height<={h}]")
+                format!("b[height<={h}]/b")
             },
             ext: "mp4",
         });
@@ -692,13 +693,13 @@ mod tests {
         assert_eq!(m[0].selector, "bv*+ba[ext=m4a]/bv*+ba/b");
         assert_eq!(
             m[DEFAULT_PICK].selector,
-            "bv*[height<=1080]+ba[ext=m4a]/bv*[height<=1080]+ba/b[height<=1080]"
+            "bv*[height<=1080]+ba[ext=m4a]/bv*[height<=1080]+ba/b[height<=1080]/b"
         );
         assert!(m.iter().any(|p| p.selector == "mp3:320" && p.ext == "mp3"));
         assert!(!m.iter().any(|p| p.selector == "ba"));
         assert!(!m.iter().any(|p| p.ext == "opus" || p.ext == "flac"));
         let plain = picks(false);
-        assert_eq!(plain[DEFAULT_PICK].selector, "b[height<=1080]");
+        assert_eq!(plain[DEFAULT_PICK].selector, "b[height<=1080]/b");
         assert!(!plain.iter().any(|p| p.selector.starts_with("mp3:")));
         assert!(!plain.iter().any(|p| p.ext == "opus" || p.ext == "flac"));
         // #611: the "Audio only" ones save only the sound, the heights don't.
