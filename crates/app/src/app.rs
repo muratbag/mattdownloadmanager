@@ -11063,6 +11063,25 @@ impl eframe::App for App {
 impl App {
     /// What runs at every frame, window or not (`logic`, and a headless run's loop).
     pub fn tick(&mut self, ctx: &egui::Context) {
+        // Windows: the main window losing the focus (Alt+Tab, a click on another program, hiding
+        // to the tray) closes every open menu at once, hiding its always-on-top window with it
+        // (#1.0.12). A program in the background may not be drawn again for a long time, and the
+        // menu window would stay "stacked" over whatever is in front until then. Elsewhere a
+        // menu's own window takes the focus (macOS, X11), so the focus leaving the main window is
+        // the menu being used, not let go of.
+        #[cfg(windows)]
+        {
+            let focused = ctx.input(|i| i.viewport().focused).unwrap_or(true);
+            let key = egui::Id::unique("mdm-main-window-focus");
+            let had = ctx.data_mut(|d| {
+                let had = d.get_temp::<bool>(key).unwrap_or(true);
+                d.insert_temp(key, focused);
+                had
+            });
+            if had && !focused {
+                crate::chrome::dismiss_menus(ctx);
+            }
+        }
         // The freeze watchdog times this as it times `ui` (crash.rs): a command or the clock
         // that hangs is reported too, minimized or not (#202).
         crate::crash::logic_begin();

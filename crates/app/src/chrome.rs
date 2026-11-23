@@ -819,6 +819,31 @@ pub enum MenuKind {
     List,
 }
 
+/// Set when the main window loses the focus (Alt+Tab, a click on another program, hiding to the
+/// tray): every open menu closes, and its always-on-top window is hidden at once. A program in the
+/// background may not be drawn again for a long time, and until then the menu window would stay
+/// over whatever is in front — the menu "stacked on the screen" (#1.0.12).
+static DISMISS_MENUS: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Where the pass's menu windows are listed ([`dismiss_menus`]), so losing the focus can close
+/// them without waiting for another pass.
+fn menu_windows_key() -> egui::Id {
+    egui::Id::unique("mdm-menu-windows")
+}
+
+/// Close every open menu now, and hide its window at once: the main window lost the focus.
+pub fn dismiss_menus(ctx: &egui::Context) {
+    use std::sync::atomic::Ordering;
+    DISMISS_MENUS.store(true, Ordering::SeqCst);
+    let windows = ctx
+        .data_mut(|d| d.remove_temp::<Vec<egui::ViewportId>>(menu_windows_key()))
+        .unwrap_or_default();
+    for vid in windows {
+        ctx.send_viewport_cmd_to(vid, egui::ViewportCommand::Close);
+    }
+    ctx.request_repaint();
+}
+
 /// Show a popup menu with its top-left at `pos` (main-window client coordinates, on screen) —
 /// its top-right in a right-to-left interface, where menus open to the left.
 ///
@@ -856,6 +881,18 @@ pub fn popup<C: Clone>(
             ctx.memory_mut(|m| m.request_focus(had));
         }
     };
+    // A pass made because the app lost the focus closes the menu instead of drawing it again
+    // (#1.0.12): Alt+Tab, a click on another program, hiding to the tray.
+    if DISMISS_MENUS.swap(false, std::sync::atomic::Ordering::SeqCst) {
+        ctx.data_mut(|d| {
+            d.remove::<usize>(sub_key);
+            d.remove::<(Option<usize>, Option<usize>)>(sub_key.with("kb"));
+        });
+        give_back(ctx);
+        return PopupResult::Dismissed;
+    }
+    // This pass's menu windows, for dismiss_menus.
+    ctx.data_mut(|d| d.insert_temp(menu_windows_key(), Vec::<egui::ViewportId>::new()));
     if let Some(r) = keyboard(ctx, entries, sub_key) {
         ctx.data_mut(|d| {
             d.remove::<usize>(sub_key);
@@ -1339,6 +1376,11 @@ fn popup_level<C: Clone>(
     // (index, slot top) of the submenu to show beside this menu.
     let mut sub_at: Option<(usize, f32)> = None;
     let vid = menu_viewport(kind, id, depth, bar_shares_window());
+    // So losing the focus can close it at once, without waiting for another pass (#1.0.12).
+    ctx.data_mut(|d| {
+        d.get_temp_mut_or_default::<Vec<egui::ViewportId>>(menu_windows_key())
+            .push(vid)
+    });
     let parent_vid = ctx.viewport_id();
     // Set when this pass made the new (hidden) window a menu window: shown below. (Elsewhere a
     // menu's window is created visible.)
