@@ -1504,8 +1504,15 @@ button:focus-visible { outline: none; }
   // the pointer is over the video and hides them as the pointer reaches the button, so going back
   // when they hide, then away again when they show, kept the button jumping from under the pointer.
   const CORNERS = [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 1, y: 1 }];
+  // A player this wide is a real player, not a thumbnail's preview: the button stays at its top
+  // right, like IDM's own. YouTube's controls and overlays come and go as the pointer moves over
+  // the video, and dodging them had it jumping from the top right to the top left and back while
+  // the person just watched (2026-11-23). A preview (a card, a hover-to-play tile) is smaller, and
+  // there the page's own buttons may really sit where ours would go.
+  const PLAYER_LEAVES_IT = 640;
   function spot(r, w, h, roomX, roomY) {
     if (chosen) return place;
+    if (r.width >= PLAYER_LEAVES_IT) return place;
     // Still while its menu is open: the player's own controls come and go as the pointer moves
     // over the video, and the menu's rows would move away from under it.
     if (menuOpen && auto.v === video && auto.at) return auto.at;
