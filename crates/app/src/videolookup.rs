@@ -1417,17 +1417,6 @@ mod tests {
             (
                 Some(1080),
                 Some(60),
-                Some("AV1"),
-                Some("HDR"),
-                Some(9900),
-                false
-            )
-        );
-        assert_eq!(
-            of(1),
-            (
-                Some(1080),
-                Some(60),
                 Some("H.264"),
                 Some("SDR"),
                 Some(8900),
@@ -1435,15 +1424,18 @@ mod tests {
             )
         );
         assert_eq!(
-            of(2),
+            of(1),
             (Some(720), Some(30), Some("H.264"), None, Some(7900), true),
             "a size the site only guessed"
         );
-        let sound = &a[3];
-        assert!(sound.original && sound.audio);
         assert_eq!(
-            (sound.kbps, sound.size, sound.approx),
-            (Some(130), Some(900), false)
+            of(2),
+            (None, None, None, None, Some(1_837_500), true),
+            "the sound is offered as MP3 only when ffmpeg can convert (#32)"
+        );
+        assert!(
+            a.iter().all(|c| !c.original),
+            "no 'original' audio row when the sound is converted to MP3"
         );
         let mp3 = a.iter().find(|c| c.label.contains("320")).unwrap();
         assert_eq!(

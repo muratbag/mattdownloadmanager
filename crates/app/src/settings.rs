@@ -1245,9 +1245,11 @@ mod tests {
         s.torrent_port = 51413;
         s.torrent_proxy = false;
         let c = s.torrent_config(dir).unwrap();
+        // A manual proxy is still configured (here an HTTP one, which torrents can't use), so
+        // torrents don't listen and leak the address: #40, "a SOCKS5 proxy or none".
         assert_eq!(
             (c.port, c.listen, c.dht, c.lsd),
-            (Some(51413), true, true, true)
+            (Some(51413), false, true, true)
         );
     }
 

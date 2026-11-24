@@ -641,6 +641,17 @@ enum Attempt {
     MergeFailed(String, Vec<String>),
 }
 
+/// A size in words, for a message about a full disk: "1.4 GB", "820 MB".
+fn human(bytes: u64) -> String {
+    const MB: u64 = 1_000_000;
+    const GB: u64 = 1_000 * MB;
+    if bytes >= GB {
+        format!("{:.1} GB", bytes as f64 / GB as f64)
+    } else {
+        format!("{} MB", bytes / MB)
+    }
+}
+
 /// End yt-dlp and everything it started (#79): whenever the download is given up, nothing may
 /// go on downloading unseen (Windows: its job, the launcher's child and ffmpeg with it).
 fn end(child: &Child) {
@@ -1552,9 +1563,31 @@ fn attempt(
                 .quality
                 .as_deref()
                 .and_then(|q| q.split_whitespace().next())
-                .map(|ids| ids.split('+').map(str::to_owned).collect())
+                .map(|ids| ids.split('+').map(str::to_owned).collect::<Vec<String>>())
                 .unwrap_or_default();
-            return Attempt::MergeFailed(ran.failure, ids);
+            // ffmpeg says "Conversion failed!" for every reason; a full disk is the common one
+            // and the only one worth naming here (#1.0.16): the parts and the file they are
+            // joined into are both written while the merge runs.
+            let failure = if ran.failure.contains("Conversion failed")
+                && let Some((dir, stem)) = template_of(&ours)
+            {
+                let parts: u64 = kept_parts(&dir, &stem, &ids)
+                    .iter()
+                    .filter_map(|p| p.metadata().ok().map(|m| m.len()))
+                    .sum();
+                match mdm_engine::disk::volume_of(&dir) {
+                    Some(volume) if volume.free < parts.saturating_add(parts / 20) => format!(
+                        "{} - the disk is full: {} free where the video goes, {} needed to join its parts. Free some space, then Resume to join them",
+                        ran.failure,
+                        human(volume.free),
+                        human(parts.saturating_add(parts / 20)),
+                    ),
+                    _ => ran.failure,
+                }
+            } else {
+                ran.failure
+            };
+            return Attempt::MergeFailed(failure, ids);
         }
         _ => return failed(ran.failure, rerouted),
     };

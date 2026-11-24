@@ -4865,6 +4865,24 @@ impl App {
             .map(|s| s.to_string_lossy().into_owned())
             .unwrap_or_else(|| "video".into());
         let _ = std::fs::create_dir_all(&folder);
+        // No room for the streams and the file they make (the parts stay while yt-dlp writes the
+        // joined one, #1.0.16): said now, in the window's words, rather than after an hour of
+        // downloading - a full disk is what made a video fail at 99% with "Conversion failed!".
+        if let Some(size) = item.size
+            && let Some(volume) = mdm_engine::disk::volume_of(&folder)
+            && !room_for(volume.free, size)
+        {
+            item.status = Status::Error;
+            item.error = Some(crate::i18n::fmt(
+                crate::i18n::t("not enough disk space: {needed} needed, {free} free"),
+                &[
+                    ("needed", &crate::model::size(size.saturating_add(size / 20))),
+                    ("free", &crate::model::size(volume.free)),
+                ],
+            ).into());
+            self.dirty = true;
+            return;
+        }
         // The quality menu's look-up, for this first run only, while it is fresh (a run started
         // again, or later than the menu keeps its look-ups, reads the page afresh).
         let preloaded = item
@@ -7630,7 +7648,7 @@ impl App {
                 I("Tell a &friend", Cmd::TellFriend, true, false),
                 // The store listing's ratings are what make the extension visible there: asked for
                 // only, never opened by itself.
-                I("&Rate on the Chrome Web Store", Cmd::RateInStore, true, false),
+                I("Rate on the Chrome &Web Store", Cmd::RateInStore, true, false),
                 // MDM's, not IDM's: the creator's GitHub Sponsors page, asked for only.
                 I("Support &MDM", Cmd::Support, true, false),
             ],
@@ -11440,6 +11458,13 @@ fn share(cap: u64, other: f64) -> u64 {
     rest.max(half).max(1024)
 }
 
+/// Whether `size` bytes fit on a volume with `free` bytes: a video's streams and the file they
+/// are joined into are both there while the merge runs, so the parts need room of their own
+/// (#1.0.16), with a little to spare for a container's own index.
+fn room_for(free: u64, size: u64) -> bool {
+    free >= size.saturating_add(size / 20).saturating_add(64 * 1024 * 1024)
+}
+
 #[cfg(test)]
 mod finished_window_tests {
     use super::finished_windows;
@@ -11945,6 +11970,16 @@ mod duplicate_tests {
     /// look-up and all; whatever the answer, a question about a download that has left the list
     /// meanwhile is checked afresh (never acted on a row that isn't there).
     #[test]
+    #[test]
+    fn a_video_needs_room_for_its_parts_and_the_file_they_make() {
+        let gb = 1024 * 1024 * 1024;
+        // 1 GB of video: its parts and the joined file both live there while the merge runs.
+        assert!(room_for(3 * gb, gb), "plenty");
+        assert!(!room_for(gb, gb), "exactly the size is not enough: the file needs it too");
+        assert!(!room_for(0, 1), "a full disk");
+        assert!(room_for(gb, 0), "nothing to download");
+    }
+
     fn the_answer_open_or_resume_drops_the_new_choices_look_up() {
         let slot = InfoSlot::new(Instant::now());
         for from_menu in [true, false] {
