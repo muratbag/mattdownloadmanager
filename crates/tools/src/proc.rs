@@ -1025,35 +1025,84 @@ fn with_usable_path(cmd: &mut Command) {
     }
 }
 
+/// The runtime found for yt-dlp ([`js_runtime_found`]): kept once found, emptied when a new one
+/// was just installed ([`refresh_js_runtime`]).
+static JS_RUNTIME: Mutex<Option<Vec<String>>> = Mutex::new(None);
+
 /// This computer's JavaScript runtime for yt-dlp ([`js_runtime`]): `Some` with the arguments
 /// that tell yt-dlp of it (none for Deno on the PATH, which it finds itself), in the PATH
 /// folders a helper gets ([`usable_dirs`]: a node.exe behind a junction is named by its real
 /// folder). Kept once found; while there is none it is looked for again at each run, so one
 /// installed meanwhile counts at the next look-up (#852).
 fn js_runtime_found() -> Option<Vec<String>> {
-    static FOUND: Mutex<Option<Vec<String>>> = Mutex::new(None);
-    let mut found = FOUND
+    let mut found = JS_RUNTIME
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     if found.is_none() {
-        let dirs: Vec<PathBuf> = std::env::var_os("PATH")
-            .map(|p| usable_dirs(&p))
-            .unwrap_or_default();
-        let home = std::env::var_os("HOME")
-            .or_else(|| std::env::var_os("USERPROFILE"))
-            .map(PathBuf::from);
-        *found = if program_in(&dirs, "deno").is_some() {
-            Some(Vec::new())
+        // MDM's own Deno first: the same on every machine, whatever the PATH says, and no person
+        // has to install Node.js or Deno for a video to list all its qualities (#852).
+        if let Some(own) = crate::tools_dir()
+            .as_deref()
+            .and_then(crate::deno::installed)
+        {
+            tracing::info!(
+                "video helpers: MDM's own Deno is the JavaScript runtime for video look-ups ({})",
+                own.exe.display()
+            );
+            *found = Some(vec![
+                "--js-runtimes".to_owned(),
+                format!("deno:{}", own.exe.display()),
+            ]);
         } else {
-            js_runtime(&dirs, &runtime_dirs(), home.as_deref()).map(|(name, path)| {
-                vec![
-                    "--js-runtimes".to_owned(),
-                    format!("{name}:{}", path.display()),
-                ]
-            })
-        };
+            let dirs: Vec<PathBuf> = std::env::var_os("PATH")
+                .map(|p| usable_dirs(&p))
+                .unwrap_or_default();
+            let home = std::env::var_os("HOME")
+                .or_else(|| std::env::var_os("USERPROFILE"))
+                .map(PathBuf::from);
+            *found = if program_in(&dirs, "deno").is_some() {
+                Some(Vec::new())
+            } else {
+                js_runtime(&dirs, &runtime_dirs(), home.as_deref()).map(|(name, path)| {
+                    vec![
+                        "--js-runtimes".to_owned(),
+                        format!("{name}:{}", path.display()),
+                    ]
+                })
+            };
+        }
     }
     found.clone()
+}
+
+/// Forget the runtime found so far: a new one was just installed (MDM's Deno, #852), and the next
+/// look-up must be told of it.
+pub fn refresh_js_runtime() {
+    let mut found = JS_RUNTIME
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    *found = None;
+}
+
+/// Whether yt-dlp has a JavaScript runtime on this computer (MDM's own Deno, or one installed):
+/// what decides if MDM fetches Deno for a video page at all (#852).
+pub fn js_runtime_ready() -> bool {
+    if crate::tools_dir()
+        .as_deref()
+        .is_some_and(|d| crate::deno::installed(d).is_some())
+    {
+        return true;
+    }
+    let dirs: Vec<PathBuf> = std::env::var_os("PATH")
+        .map(|p| usable_dirs(&p))
+        .unwrap_or_default();
+    if program_in(&dirs, "deno").is_some() || program_in(&dirs, "node").is_some() {
+        return true;
+    }
+    let home = std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(PathBuf::from);
+    js_runtime(&dirs, &runtime_dirs(), home.as_deref()).is_some()
 }
 
 /// `--js-runtimes` for this computer's runtime, when yt-dlp must be told of it.

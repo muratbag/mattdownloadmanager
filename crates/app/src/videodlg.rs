@@ -177,9 +177,11 @@ pub fn auto_update(rt: &tokio::runtime::Handle) {
     if STARTED.swap(true, Ordering::SeqCst) {
         return;
     }
+    // Each helper is tried on its own: a failed yt-dlp check must not hold back the JavaScript
+    // runtime a video page needs (2026-11-24: a 10-minute retry sleep left Deno untried entirely).
     const FIRST_CHECK: Duration = Duration::from_secs(30);
-    const RETRY_AFTER: Duration = Duration::from_secs(10 * 60);
-    const TRIES: u32 = 3;
+    const RETRY_AFTER: Duration = Duration::from_secs(2 * 60);
+    const TRIES: u32 = 2;
     const DAILY: Duration = Duration::from_secs(24 * 60 * 60);
     rt.spawn(async move {
         tokio::time::sleep(FIRST_CHECK).await;
@@ -187,15 +189,16 @@ pub fn auto_update(rt: &tokio::runtime::Handle) {
             let Some(dir) = mdm_tools::tools_dir() else {
                 return;
             };
+            let net = crate::settings::own_net();
             if mdm_tools::refreshable(&dir) {
                 for attempt in 1..=TRIES {
-                    match mdm_tools::install_latest(&dir, &crate::settings::own_net(), None).await {
+                    match mdm_tools::install_latest(&dir, &net, None).await {
                         Ok(i) => {
                             tracing::info!("video helpers: yt-dlp {} checked and current", i.version);
                             break;
                         }
                         Err(e) => {
-                            eprintln!("yt-dlp update check ({attempt}/{TRIES}): {e}");
+                            tracing::warn!("yt-dlp update check ({attempt}/{TRIES}): {e}");
                             if attempt == TRIES {
                                 break;
                             }
@@ -208,15 +211,38 @@ pub fn auto_update(rt: &tokio::runtime::Handle) {
                 && ffmpeg_age_days(&current.version).is_none_or(stale_ffmpeg)
             {
                 for attempt in 1..=TRIES {
-                    match mdm_tools::ffmpeg::install_latest(&dir, &crate::settings::own_net(), None)
-                        .await
-                    {
+                    match mdm_tools::ffmpeg::install_latest(&dir, &net, None).await {
                         Ok(i) => {
                             tracing::info!("video helpers: ffmpeg {} installed", i.version);
                             break;
                         }
                         Err(e) => {
-                            eprintln!("ffmpeg update check ({attempt}/{TRIES}): {e}");
+                            tracing::warn!("ffmpeg update check ({attempt}/{TRIES}): {e}");
+                            if attempt == TRIES {
+                                break;
+                            }
+                            tokio::time::sleep(RETRY_AFTER).await;
+                        }
+                    }
+                }
+            }
+            // The JavaScript runtime YouTube's full quality list needs (#852): MDM's own Deno, so
+            // nobody has to install Node.js or Deno themselves - without it YouTube offers only
+            // part of its qualities, and a video may fail half way. Only when a video page can be
+            // used at all (yt-dlp is installed) and this computer has no runtime anywhere yet.
+            if mdm_tools::installed(&dir).is_some() && !mdm_tools::proc::js_runtime_ready() {
+                for attempt in 1..=TRIES {
+                    match mdm_tools::deno::install_latest(&dir, &net, None).await {
+                        Ok(i) => {
+                            tracing::info!(
+                                "video helpers: deno {} installed (the JavaScript runtime for YouTube)",
+                                i.version
+                            );
+                            mdm_tools::proc::refresh_js_runtime();
+                            break;
+                        }
+                        Err(e) => {
+                            tracing::warn!("deno install ({attempt}/{TRIES}): {e}");
                             if attempt == TRIES {
                                 break;
                             }
@@ -229,7 +255,6 @@ pub fn auto_update(rt: &tokio::runtime::Handle) {
         }
     });
 }
-
 
 fn tools() -> Tools {
     let dir = mdm_tools::tools_dir();
