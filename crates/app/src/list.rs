@@ -415,6 +415,9 @@ pub struct ListResponse {
     pub header_context: Option<Pos2>,
     /// The sort column or direction changed.
     pub sort_changed: bool,
+    /// A drag started on this row (not the blank space's selection box): a finished download's
+    /// file can be dragged out to the desktop or another program (#869).
+    pub drag_out: Option<usize>,
 }
 
 /// A Windows list view's keys while the list has the focus (and no text box does), with its
@@ -1221,6 +1224,14 @@ pub fn show(
         out.context = Some((focus, pos2(winui::mx(at.x), at.y)));
     }
 
+    // A drag that starts on a row: the file itself goes where the person takes it (a finished
+    // download; the window decides which rows can).
+    if resp.drag_started()
+        && let Some(origin) = ui.input(|i| i.pointer.press_origin()).map(english)
+        && let Some(row) = row_at(origin)
+    {
+        out.drag_out = Some(row);
+    }
     // A selection box, dragged from blank space (below the rows or right of the columns), as in
     // Explorer: the rows it touches are selected, Ctrl adds them; dragging past the top or bottom
     // scrolls.

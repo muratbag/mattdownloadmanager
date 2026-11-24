@@ -3083,6 +3083,15 @@ pub enum DraggedOut {
 static DRAGGED_OUT: Mutex<Vec<(u64, PathBuf, DraggedOut)>> = Mutex::new(Vec::new());
 
 /// What [`DRAGGED_OUT`] was given since the last call (the app updates its downloads).
+/// Record that a download's own drag out (a row of the list, #869) ended: the window applies it
+/// with the others ([`dragged_out`]).
+pub fn record_dragged_out(id: u64, from: PathBuf, out: DraggedOut) {
+    DRAGGED_OUT
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .push((id, from, out));
+}
+
 pub fn dragged_out() -> Vec<(u64, PathBuf, DraggedOut)> {
     std::mem::take(&mut *DRAGGED_OUT.lock().unwrap_or_else(|e| e.into_inner()))
 }

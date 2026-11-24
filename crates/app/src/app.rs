@@ -8866,6 +8866,31 @@ impl App {
         if let Some(i) = r.enter {
             self.open_item(ids[i]);
         }
+        // A finished download dragged out of the list: its file goes where the person takes it,
+        // as from Download complete (#869). A move is followed, so the download keeps pointing at
+        // its file.
+        #[cfg(windows)]
+        if let Some(i) = r.drag_out {
+            let id = ids[i];
+            let dragged = self
+                .items
+                .iter()
+                .find(|it| it.id == id)
+                .filter(|it| it.status == Status::Complete && !it.moved_away)
+                .map(|it| it.dest.clone());
+            if let Some(path) = dragged {
+                tracing::info!("drag out: download {id} dragged out of the list ({})", path.display());
+                let (id, from, wake) = (id, path.clone(), ctx.clone());
+                let followed = move |out| {
+                    crate::dialogs::record_dragged_out(id, from.clone(), out);
+                    wake.request_repaint();
+                };
+                if let Err(e) = crate::win32::drag_file_out(crate::MAIN_TITLE, &path, followed)
+                {
+                    tracing::warn!("drag out of the list: {e}");
+                }
+            }
+        }
         // Something droppable over the window: the list is where it goes.
         let dragging = self.drops.over() || ctx.input(|i| !i.raw.hovered_files.is_empty());
         if dragging {
