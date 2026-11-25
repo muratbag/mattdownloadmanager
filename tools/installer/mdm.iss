@@ -33,11 +33,11 @@ AppId={{51CA5712-5B18-49EC-BD2C-DEF46253F6D3}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
-AppPublisher=Ahmed Nefzaoui
+AppPublisher=Teacher Matt
 AppPublisherURL=https://idm.teachermatt.com/
 AppSupportURL=https://idm.teachermatt.com/help.html
 AppUpdatesURL=https://idm.teachermatt.com/changelog.html
-AppCopyright=Copyright (C) 2026 Ahmed Nefzaoui
+AppCopyright=Copyright (C) 2026 Teacher Matt
 DefaultDirName={autopf}\{#AppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
@@ -81,7 +81,7 @@ ChangesAssociations=yes
 ; fallback for anything else holding the files (a browser running the host).
 CloseApplications=yes
 VersionInfoVersion={#AppVersion}
-VersionInfoCompany=Ahmed Nefzaoui
+VersionInfoCompany=Teacher Matt
 VersionInfoDescription={#AppName} setup
 VersionInfoProductName={#AppName}
 #ifdef Sign

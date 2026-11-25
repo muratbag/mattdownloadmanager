@@ -16,10 +16,10 @@ fn main() {
     res.set_icon(icon.to_str().expect("icon path"))
         .set("ProductName", "Matt Download Manager")
         .set("FileDescription", "Matt Download Manager MCP server")
-        .set("CompanyName", "Ahmed Nefzaoui")
+        .set("CompanyName", "Teacher Matt")
         .set(
             "LegalCopyright",
-            "Copyright (C) 2026 Ahmed Nefzaoui. GPL-3.0-or-later.",
+            "Copyright (C) 2026 Teacher Matt. GPL-3.0-or-later.",
         )
         .set("OriginalFilename", "mattdownloadmanager-mcp.exe")
         .set("InternalName", "mattdownloadmanager-mcp.exe")
