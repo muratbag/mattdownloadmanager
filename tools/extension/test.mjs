@@ -1472,7 +1472,14 @@ const MPD = (protect) => `<?xml version="1.0"?>
   assert.equal((await saved(bare))[0], "Movie the title.webm");
   // The popup's tag is the saved file's type (popup.js tagOf), its name the saved one (nameOf).
   const popup = readFileSync(new URL("../../extension/popup.js", import.meta.url), "utf8");
-  const part = (name) => popup.slice(popup.indexOf(`function ${name}(`), popup.indexOf("\n}\n", popup.indexOf(`function ${name}(`)) + 2);
+  // A checkout on Windows has CRLF line ends: the boundaries are found on LF text.
+  const popupText = popup.replace(/\r\n/g, "\n");
+  const part = (name) => {
+      const start = popupText.indexOf(`function ${name}(`);
+      const end = popupText.indexOf("\n}\n", start + 2);
+      // Include the closing "\n}" itself: the function must be whole for eval.
+    return popupText.slice(start, end < 0 ? popupText.length : end + 2);
+    };
   const shown = new Function(`const TYPES = {}; ${part("tagOf")}\n${part("nameOf")}\nreturn [tagOf, nameOf];`)();
   const [tagOf, nameOf] = shown;
   const listed = (await popupAsk(listeners, { type: "media", tab: 9 })).media;
@@ -2588,7 +2595,7 @@ function videoButton({ stored = {} } = {}) {
   const keys = source.slice(source.indexOf('shadow.addEventListener("keydown"'), source.indexOf("// The main part: a click downloads"));
   assert.equal(keys.match(/e\.stopPropagation\(\)/g).length, 5, "Escape (the menu, the button), Enter and Space, the arrows, ↓ on the button: not the page's too");
   assert.ok(fn("spot").includes("if (menuOpen && auto.v === video && auto.at) return auto.at;"), "spot: still while its menu is open");
-  assert.equal(source.match(/innerHTML/g).length, 1, "markup only for the fixed parts");
+  assert.ok(!/innerHTML/.test(source), "markup built without innerHTML (no validator warning)");
   assert.ok(!/insertAdjacentHTML|outerHTML|setInterval/.test(source));
   assert.ok(/send\(\{ type: "video-pick", token: l\.token, choice: i \}\)/.test(fn("pick")), "a pick: the token and the row's number");
   assert.equal(source.split('"video-lookup"').length, 2, "one lookup message");
