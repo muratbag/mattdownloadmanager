@@ -1045,52 +1045,111 @@ button:focus-visible { outline: none; }
     style.textContent = CSS;
     shadow.appendChild(style);
   }
-  // Its markup, fixed (the words go in as text): the tab, its tip, the drag's guide, its list.
-  const ICON = 'fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
-  const markup = `
-<div class="guide"></div>
-<div class="pill" part="pill" data-state="ready">
-  <button class="go" type="button">
-    <span class="grip" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
-    <span class="icon">
-      <img class="logo" alt="" draggable="false">
-      <span class="spin"></span>
-      <svg class="i-sent" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="var(--ok)"/><path d="M4.6 8.2 7 10.5l4.4-4.6" stroke="#fff" stroke-width="1.7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <svg class="i-warn" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="var(--warn-dot)"/><path d="M8 4.2v4.6" stroke="#1b1b1b" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="11.4" r="1" fill="#1b1b1b"/></svg>
-      <svg class="i-err" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="var(--err)"/><path d="M8 4.2v4.6" stroke="#fff" stroke-width="1.7" stroke-linecap="round"/><circle cx="8" cy="11.4" r="1" fill="#fff"/></svg>
-      <svg class="i-off" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4" stroke="var(--tx2)" stroke-width="1.5" fill="none"/><path d="M3.6 12.4 12.4 3.6" stroke="var(--tx2)" stroke-width="1.5"/></svg>
-      <svg class="i-drm" viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="7" rx="1.5" fill="var(--tx2)"/><path d="M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7" stroke="var(--tx2)" stroke-width="1.5" fill="none"/></svg>
-    </span>
-    <span class="label"></span>
-    <span class="sub"></span>
-    <span class="chip"></span>
-  </button>
-  <span class="acts"></span>
-  <button class="more" type="button" aria-haspopup="menu" aria-expanded="false">
-    <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>
-  </button>
-  <button class="x" type="button">
-    <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2.5 2.5l5 5M7.5 2.5l-5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-  </button>
-</div>
-<div class="tip" role="tooltip"><span class="what"></span><span class="how"></span></div>
-<span class="tpl" hidden><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 2.5v8M4.8 7.4 8 10.6l3.2-3.2M3 13.5h10"/></svg></span>
-<div class="menu" role="menu" tabindex="-1">
-  <div class="mh"><img alt="" draggable="false"><div><span class="t"></span><span class="s"></span></div></div>
-  <div class="hr"></div>
-  <div class="note" role="status" hidden></div>
-  <div class="rows" role="group"></div>
-  <div class="hr"></div>
-  <button role="menuitem" data-act="window"><span class="mi"><svg viewBox="0 0 16 16" ${ICON} stroke-width="1.4"><path d="M2.5 4h11M2.5 8h11M2.5 12h7"/></svg></span><span></span></button>
-  <div class="hr"></div>
-  <button role="menuitem" data-act="hide"><span class="mi"><svg viewBox="0 0 16 16" ${ICON} stroke-width="1.4"><circle cx="8" cy="8" r="5.5"/><path d="M4.2 11.8l7.6-7.6"/></svg></span><span></span><span class="k">Esc</span></button>
-  <button role="menuitem" data-act="never"><span class="mi"><svg viewBox="0 0 16 16" ${ICON} stroke-width="1.4"><circle cx="8" cy="8" r="5.5"/><path d="M2.5 8h11M8 2.5c2 2 2 9 0 11M8 2.5c-2 2-2 9 0 11"/></svg></span><span></span></button>
-  <button role="menuitem" data-act="settings"><span class="mi"><svg viewBox="0 0 16 16" ${ICON} stroke-width="1.4"><circle cx="8" cy="8" r="2"/><path d="M8 1.8v2M8 12.2v2M1.8 8h2M12.2 8h2M3.6 3.6l1.4 1.4M11 11l1.4 1.4M3.6 12.4 5 11M11 5l1.4-1.4"/></svg></span><span></span></button>
-</div>`;
-  // Fixed markup, parsed as markup without an HTML-string assignment (the store's validator flags
-  // that pattern, and nothing in here is a person's text - the words are set below as text nodes):
-  // a contextual fragment keeps the markup's meaning (a button inside a shadow root, its SVG).
-  shadow.appendChild(document.createRange().createContextualFragment(markup));
+  // Its markup, made as elements: no HTML string is ever parsed here (the add-ons stores'
+  // validators flag that pattern, and nothing in this panel is ever a page's own text - the words
+  // go in as text below). The tab, its tip, the drag's guide and its list.
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const h = (tag, attrs, ...kids) => {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (k === "class") node.className = v;
+      else node.setAttribute(k, v);
+    }
+    for (const kid of kids.flat()) if (kid != null) node.append(kid);
+    return node;
+  };
+  const svg = (attrs, ...kids) => {
+    const node = document.createElementNS(SVGNS, "svg");
+    for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, v);
+    for (const kid of kids.flat()) if (kid != null) node.append(kid);
+    return node;
+  };
+  const shape = (tag, attrs) => {
+    const node = document.createElementNS(SVGNS, tag);
+    for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, v);
+    return node;
+  };
+  const ICON = {
+    fill: "none",
+    stroke: "currentColor",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+    "aria-hidden": "true",
+  };
+  shadow.append(
+    h("div", { class: "guide" }),
+    h("div", { class: "pill", part: "pill", "data-state": "ready" },
+      h("button", { class: "go", type: "button" },
+        h("span", { class: "grip", "aria-hidden": "true" }, ...Array.from({ length: 6 }, () => h("i"))),
+        h("span", { class: "icon" },
+          h("img", { class: "logo", alt: "", draggable: "false" }),
+          h("span", { class: "spin" }),
+          svg({ class: "i-sent", viewBox: "0 0 16 16", "aria-hidden": "true" },
+            shape("circle", { cx: "8", cy: "8", r: "8", fill: "var(--ok)" }),
+            shape("path", { d: "M4.6 8.2 7 10.5l4.4-4.6", stroke: "#fff", "stroke-width": "1.7", fill: "none", "stroke-linecap": "round", "stroke-linejoin": "round" })),
+          svg({ class: "i-warn", viewBox: "0 0 16 16", "aria-hidden": "true" },
+            shape("circle", { cx: "8", cy: "8", r: "8", fill: "var(--warn-dot)" }),
+            shape("path", { d: "M8 4.2v4.6", stroke: "#1b1b1b", "stroke-width": "1.7", "stroke-linecap": "round" }),
+            shape("circle", { cx: "8", cy: "11.4", r: "1", fill: "#1b1b1b" })),
+          svg({ class: "i-err", viewBox: "0 0 16 16", "aria-hidden": "true" },
+            shape("circle", { cx: "8", cy: "8", r: "8", fill: "var(--err)" }),
+            shape("path", { d: "M8 4.2v4.6", stroke: "#fff", "stroke-width": "1.7", "stroke-linecap": "round" }),
+            shape("circle", { cx: "8", cy: "11.4", r: "1", fill: "#fff" })),
+          svg({ class: "i-off", viewBox: "0 0 16 16", "aria-hidden": "true" },
+            shape("circle", { cx: "8", cy: "8", r: "6.4", stroke: "var(--tx2)", "stroke-width": "1.5", fill: "none" }),
+            shape("path", { d: "M3.6 12.4 12.4 3.6", stroke: "var(--tx2)", "stroke-width": "1.5" })),
+          svg({ class: "i-drm", viewBox: "0 0 16 16", "aria-hidden": "true" },
+            shape("rect", { x: "3.5", y: "7", width: "9", height: "7", rx: "1.5", fill: "var(--tx2)" }),
+            shape("path", { d: "M5.5 7V5.2a2.5 2.5 0 0 1 5 0V7", stroke: "var(--tx2)", "stroke-width": "1.5", fill: "none" }))),
+        h("span", { class: "label" }),
+        h("span", { class: "sub" }),
+        h("span", { class: "chip" })),
+      h("span", { class: "acts" }),
+      h("button", { class: "more", type: "button", "aria-haspopup": "menu", "aria-expanded": "false" },
+        svg({ viewBox: "0 0 10 10", "aria-hidden": "true" },
+          shape("path", { d: "M2 3.5 5 6.5 8 3.5", stroke: "currentColor", "stroke-width": "1.4", fill: "none", "stroke-linecap": "round" }))),
+      h("button", { class: "x", type: "button" },
+        svg({ viewBox: "0 0 10 10", "aria-hidden": "true" },
+          shape("path", { d: "M2.5 2.5l5 5M7.5 2.5l-5 5", stroke: "currentColor", "stroke-width": "1.3", "stroke-linecap": "round" })))),
+    h("div", { class: "tip", role: "tooltip" },
+      h("span", { class: "what" }),
+      h("span", { class: "how" })),
+    h("span", { class: "tpl", hidden: "" },
+      svg({ viewBox: "0 0 16 16", ...ICON, "stroke-width": "2.2" },
+        shape("path", { d: "M8 2.5v8M4.8 7.4 8 10.6l3.2-3.2M3 13.5h10" }))),
+    h("div", { class: "menu", role: "menu", tabindex: "-1" },
+      h("div", { class: "mh" },
+        h("img", { alt: "", draggable: "false" }),
+        h("div", null, h("span", { class: "t" }), h("span", { class: "s" }))),
+      h("div", { class: "hr" }),
+      h("div", { class: "note", role: "status", hidden: "" }),
+      h("div", { class: "rows", role: "group" }),
+      h("div", { class: "hr" }),
+      h("button", { role: "menuitem", "data-act": "window" },
+        h("span", { class: "mi" },
+          svg({ viewBox: "0 0 16 16", ...ICON, "stroke-width": "1.4" },
+            shape("path", { d: "M2.5 4h11M2.5 8h11M2.5 12h7" }))),
+        h("span")),
+      h("div", { class: "hr" }),
+      h("button", { role: "menuitem", "data-act": "hide" },
+        h("span", { class: "mi" },
+          svg({ viewBox: "0 0 16 16", ...ICON, "stroke-width": "1.4" },
+            shape("circle", { cx: "8", cy: "8", r: "5.5" }),
+            shape("path", { d: "M4.2 11.8l7.6-7.6" }))),
+        h("span"),
+        h("span", { class: "k" }, "Esc")),
+      h("button", { role: "menuitem", "data-act": "never" },
+        h("span", { class: "mi" },
+          svg({ viewBox: "0 0 16 16", ...ICON, "stroke-width": "1.4" },
+            shape("circle", { cx: "8", cy: "8", r: "5.5" }),
+            shape("path", { d: "M2.5 8h11M8 2.5c2 2 2 9 0 11M8 2.5c-2 2-2 9 0 11" }))),
+        h("span")),
+      h("button", { role: "menuitem", "data-act": "settings" },
+        h("span", { class: "mi" },
+          svg({ viewBox: "0 0 16 16", ...ICON, "stroke-width": "1.4" },
+            shape("circle", { cx: "8", cy: "8", r: "2" }),
+            shape("path", { d: "M8 1.8v2M8 12.2v2M1.8 8h2M12.2 8h2M3.6 3.6l1.4 1.4M11 11l1.4 1.4M3.6 12.4 5 11M11 5l1.4-1.4" }))),
+        h("span"))));
   const $ = (sel) => shadow.querySelector(sel);
   const pill = $(".pill");
   const go = $(".go");
