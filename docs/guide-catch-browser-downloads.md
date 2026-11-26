@@ -23,7 +23,7 @@ Once it is set up, a download link goes like this:
 
 ## In Firefox
 
-1. Open the add-on's page on addons.mozilla.org, [Matt Download Manager](https://addons.mozilla.org/firefox/addon/mister-download-manager/), and click **Add to Firefox**. Zen and LibreWolf use the same page.
+1. Open the add-on's page on addons.mozilla.org, [Matt Download Manager](https://addons.mozilla.org/en-US/firefox/addon/matt-download-manager/), and click **Add to Firefox**. Zen and LibreWolf use the same page.
 2. Firefox asks to confirm: click **Add**. Firefox keeps the add-on up to date.
 3. Go to a web page and click a download link, for example a ZIP or an EXE: MDM opens **Download File Info**. Click **Start Download**.
 

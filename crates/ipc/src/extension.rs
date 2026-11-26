@@ -13,7 +13,8 @@ pub const STORE_ID: &str = "kiddjkmogppidgcidochfmeibhbjoedi";
 pub const OTHER_STORE_IDS: [&str; 2] = ["EDGE_ADDONS_ID_PENDING", "OPERA_ADDONS_ID_PENDING"];
 /// The Firefox add-on's page on addons.mozilla.org (listed: Firefox installs and updates it from
 /// there).
-pub const FIREFOX_PAGE: &str = "https://idm.teachermatt.com/help/guide-catch-browser-downloads.html";
+pub const FIREFOX_PAGE: &str =
+    "https://addons.mozilla.org/en-US/firefox/addon/matt-download-manager/";
 /// The Firefox add-on's ID (extension/manifest.firefox.json).
 pub const FIREFOX_ID: &str = "integration@mattdownloadmanager.com";
 /// Store IDs an earlier 1.0.0 build registered with Chrome's external-extension key while it was
