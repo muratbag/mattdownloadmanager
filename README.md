@@ -1,5 +1,11 @@
 # Matt Download Manager
 
+[![Latest release](https://img.shields.io/github/v/release/muratbag/mattdownloadmanager?label=release)](https://github.com/muratbag/mattdownloadmanager/releases/latest)
+[![Licence](https://img.shields.io/badge/licence-GPL--3.0--or--later-blue)](https://idm.teachermatt.com/licenses.html)
+[![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D4)](https://idm.teachermatt.com/download.html)
+[![Firefox add-on](https://img.shields.io/amo/v/matt-download-manager?label=Firefox%20add-on)](https://addons.mozilla.org/en-US/firefox/addon/matt-download-manager/)
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-extension-4285F4)](https://chromewebstore.google.com/detail/matt-download-manager/kiddjkmogppidgcidochfmeibhbjoedi)
+
 **Free, open-source download manager for Windows 10 and 11** — a free alternative to Internet
 Download Manager: segmented multi-connection downloads, resume, browser capture, video downloads,
 torrents and magnet links, a scheduler, queues, categories, speed limits, portable mode and 86
@@ -77,3 +83,12 @@ GPL-3.0-or-later. Matt Download Manager is a rebrand of
 
 "Internet Download Manager" and "IDM" are trademarks of their owner; this project is not affiliated
 with or endorsed by them.
+
+## Spread the word
+
+This program grows by word of mouth: there is no advertising budget and no paid promotion. If it
+saves you time, a star here or a post somewhere helps more than anything else.
+
+- Ready-to-post texts for social media, forums and comments: https://idm.teachermatt.com/spread.html
+- Press kit (boilerplate, fact sheet, screenshots, logos): https://idm.teachermatt.com/press.html
+- Found a bug or want a feature? Open an issue: https://github.com/muratbag/mattdownloadmanager/issues
