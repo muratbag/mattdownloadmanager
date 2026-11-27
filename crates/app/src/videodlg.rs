@@ -1006,12 +1006,18 @@ impl VideoDialog {
                         16.0,
                     );
                     let label = choice_label(&c.label);
+                    let details = choice_details(c);
+                    let shown = if details.is_empty() {
+                        label.clone()
+                    } else {
+                        format!("{label} · {}", crate::i18n::ltr(&details))
+                    };
                     let x = row.left() + 4.0 + crate::fileicons::INDENT;
-                    text(clip, x, row.top() + 12.0, &label, look.ink);
+                    text(clip, x, row.top() + 12.0, &shown, look.ink);
                     let (size, said) = choice_size(c);
                     // Read as the format and its size (#95: the choices were blank to a screen reader
                     // and alike to UI Automation), in the user's language, as drawn.
-                    look.name = format!("{label}, {said}");
+                    look.name = format!("{shown}, {said}");
                     winui::text_right(clip, row.right() - 6.0, row.top() + 12.0, &size, look.ink);
                 },
             );
@@ -1733,6 +1739,25 @@ pub(crate) fn choice_size(c: &Choice) -> (String, String) {
             &[("size", &size)],
         ),
     )
+}
+
+/// What else a choice's line says after its label, as the browser's menu says it too: the
+/// picture's codec, its frame rate and its dynamic range ("AV1 · 25 fps · HDR"). Empty for a
+/// sound-only choice.
+pub(crate) fn choice_details(c: &Choice) -> String {
+    let mut parts: Vec<String> = Vec::new();
+    if let Some(codec) = c.codec.as_deref().filter(|s| !s.is_empty()) {
+        parts.push(codec.to_owned());
+    }
+    if let Some(fps) = c.fps {
+        // i18n: a frame rate in the Download video window's list of qualities, after the codec
+        // ("AV1 · 25 fps · HDR"); {fps} is a number. "fps" is the same in most languages.
+        parts.push(crate::i18n::fmt(crate::i18n::t("{fps} fps"), &[("fps", &fps.to_string())]));
+    }
+    if let Some(range) = c.range.as_deref().filter(|r| *r != "SDR") {
+        parts.push(range.to_owned());
+    }
+    parts.join(" · ")
 }
 
 /// A choice's label in the user's language: the audio choice's words translated, the rest (a

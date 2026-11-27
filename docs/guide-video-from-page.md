@@ -38,3 +38,24 @@ If the video won't download, see [Video downloads](video.md#if-a-video-wont-down
 - [Video downloads in detail →](video.md)
 - [Find a download in a long list →](guide-find-in-long-list.md)
 - [Back to the docs index →](README.md)
+
+## A downloaded video plays with the sound only
+
+Some players show a downloaded video as sound with no picture. Usually the file is not broken: it
+is **AV1** (`av01`), and that player has no AV1 decoder. YouTube serves **2160p (4K) and above only
+as AV1 or VP9** — there is no H.264 file at that size — so a 4K download from YouTube is AV1, while
+1080p and below are H.264/MP4 that every player opens.
+
+How to play it:
+
+- Play the file in **VLC, MPC-HC or PotPlayer**. All three are free and decode AV1 in software.
+- Or install Microsoft's free **AV1 Video Extension** from the Microsoft Store (search for "AV1
+  Video Extension"); players that use Windows' own media codecs then open AV1 too.
+- Or update your player: **GOM Player** and **Windows Media Player** need a recent version with AV1
+  support.
+- Or download the **1080p** version of the video instead: in {{name}}'s quality list a video choice
+  shows its codec beside its height ("2160p · AV1" or "1080p · H.264"), so pick the H.264 line when
+  the player is old.
+
+Converting the 4K AV1 file to H.264 afterwards is possible with ffmpeg (`ffmpeg -i in.mp4 -c:v
+libx264 -crf 20 out.mp4`), but it takes hours for a two-hour video and loses a little quality.
